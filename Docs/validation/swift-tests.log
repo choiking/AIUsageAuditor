@@ -1,0 +1,95 @@
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/configuration is not accessible or not writable, disabling user-level cache features.
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/security is not accessible or not writable, disabling user-level cache features.
+[0/1] Planning build
+Building for debugging...
+[0/8] Write sources
+[1/8] Write swift-version--58304C5D6DBC2206.txt
+[3/6] Compiling AuditorCoreTests MultiAppTests.swift
+[4/6] Emitting module AuditorCoreTests
+[4/6] Write Objects.LinkFileList
+[5/6] Linking AIUsageAuditorPackageTests
+Build complete! (0.94s)
+Test Suite 'All tests' started at 2026-09-12 23:29:41.200.
+Test Suite 'AIUsageAuditorPackageTests.xctest' started at 2026-09-12 23:29:41.200.
+Test Suite 'MatchingTests' started at 2026-09-12 23:29:41.200.
+Test Case '-[AuditorCoreTests.MatchingTests testAmbiguousRoleFailsClosed]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testAmbiguousRoleFailsClosed]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testConversationScopeExcludesSidebar]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testConversationScopeExcludesSidebar]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testDefaultConfigurationRoundTrips]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testDefaultConfigurationRoundTrips]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testDocumentIdentityIgnoresTitleAndRejectsForeignHosts]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testDocumentIdentityIgnoresTitleAndRejectsForeignHosts]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testExtractsRolesExcludesDraftsAndButtons]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testExtractsRolesExcludesDraftsAndButtons]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testGenericChatGPTGroupDoesNotSwallowWholeConversation]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testGenericChatGPTGroupDoesNotSwallowWholeConversation]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testInvalidConfigurationRejected]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testInvalidConfigurationRejected]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testNestedTextNotCountedTwiceAndRepeatsPreserved]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testNestedTextNotCountedTwiceAndRepeatsPreserved]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MatchingTests testNoAlternationGuessForUnlabeledText]' started.
+Test Case '-[AuditorCoreTests.MatchingTests testNoAlternationGuessForUnlabeledText]' passed (0.000 seconds).
+Test Suite 'MatchingTests' passed at 2026-09-12 23:29:41.204.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'MultiAppTests' started at 2026-09-12 23:29:41.204.
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeDoesNotGuessRolesFromArbitraryText]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeDoesNotGuessRolesFromArbitraryText]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeGeneratingAndHostIsolation]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeGeneratingAndHostIsolation]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeObservedStructureExcludesPreviewToolbarSidebarAndDraft]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeObservedStructureExcludesPreviewToolbarSidebarAndDraft]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeUnknownRoleFailsClosed]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testClaudeUnknownRoleFailsClosed]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testConfigurationsRoundTripAndRejectUnsupportedApps]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testConfigurationsRoundTripAndRejectUnsupportedApps]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testInterleavedAppsHaveSeparateRequestsOutputsAndTotals]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testInterleavedAppsHaveSeparateRequestsOutputsAndTotals]' passed (0.002 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testLegacyLedgerDefaultsToChatGPTWithoutLosingDedupKeys]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testLegacyLedgerDefaultsToChatGPTWithoutLosingDedupKeys]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.MultiAppTests testSuspendingOneAppDoesNotResetTheOther]' started.
+Test Case '-[AuditorCoreTests.MultiAppTests testSuspendingOneAppDoesNotResetTheOther]' passed (0.000 seconds).
+Test Suite 'MultiAppTests' passed at 2026-09-12 23:29:41.208.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'PersistenceTests' started at 2026-09-12 23:29:41.208.
+Test Case '-[AuditorCoreTests.PersistenceTests testAtomicRoundTripAndOptionalMetadata]' started.
+Test Case '-[AuditorCoreTests.PersistenceTests testAtomicRoundTripAndOptionalMetadata]' passed (0.005 seconds).
+Test Case '-[AuditorCoreTests.PersistenceTests testCorruptionIsReportedAndNotOverwritten]' started.
+Test Case '-[AuditorCoreTests.PersistenceTests testCorruptionIsReportedAndNotOverwritten]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.PersistenceTests testHeuristicHandlesEmptyASCIIChineseEmoji]' started.
+Test Case '-[AuditorCoreTests.PersistenceTests testHeuristicHandlesEmptyASCIIChineseEmoji]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.PersistenceTests testLocalDayBoundary]' started.
+Test Case '-[AuditorCoreTests.PersistenceTests testLocalDayBoundary]' passed (0.000 seconds).
+Test Suite 'PersistenceTests' passed at 2026-09-12 23:29:41.214.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.006 (0.006) seconds
+Test Suite 'TrackerTests' started at 2026-09-12 23:29:41.214.
+Test Case '-[AuditorCoreTests.TrackerTests testExistingHistoryIsBaseline]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testExistingHistoryIsBaseline]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testMultipleTurnsKeepCorrectParentRequests]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testMultipleTurnsKeepCorrectParentRequests]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testOldPromptNewAnswerIsNotAttributedToNewRequest]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testOldPromptNewAnswerIsNotAttributedToNewRequest]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testPrependEditAndShrinkRebaseWithoutCountingHistory]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testPrependEditAndShrinkRebaseWithoutCountingHistory]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testPreviouslySeenHistoryReappearingAfterEmptySnapshotIsNotCounted]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testPreviouslySeenHistoryReappearingAfterEmptySnapshotIsNotCounted]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testRepeatedIdenticalPromptsAreSeparateRequests]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testRepeatedIdenticalPromptsAreSeparateRequests]' passed (0.002 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testSendConfirmedAndStreamingUpsertsOneOutput]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testSendConfirmedAndStreamingUpsertsOneOutput]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testSuspensionDropsUnobservedUsage]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testSuspensionDropsUnobservedUsage]' passed (0.000 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testSwitchingAndRestartDoNotRecountHistory]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testSwitchingAndRestartDoNotRecountHistory]' passed (0.001 seconds).
+Test Case '-[AuditorCoreTests.TrackerTests testTransientNewNodeIsNotCounted]' started.
+Test Case '-[AuditorCoreTests.TrackerTests testTransientNewNodeIsNotCounted]' passed (0.000 seconds).
+Test Suite 'TrackerTests' passed at 2026-09-12 23:29:41.222.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+Test Suite 'AIUsageAuditorPackageTests.xctest' passed at 2026-09-12 23:29:41.222.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.020 (0.021) seconds
+Test Suite 'All tests' passed at 2026-09-12 23:29:41.222.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.020 (0.022) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

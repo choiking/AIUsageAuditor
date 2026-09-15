@@ -1,0 +1,23 @@
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/configuration is not accessible or not writable, disabling user-level cache features.
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/security is not accessible or not writable, disabling user-level cache features.
+Building for production...
+[0/6] Write sources
+[3/6] Write swift-version--58304C5D6DBC2206.txt
+[5/7] Compiling AuditorCore AIApp.swift
+[6/8] Compiling AccessibilityKit AXReader.swift
+[7/9] Compiling AIUsageAuditor AIUsageAuditorApp.swift
+[7/9] Write Objects.LinkFileList
+[8/9] Linking AIUsageAuditor
+Build of product 'AIUsageAuditor' complete! (7.03s)
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/configuration is not accessible or not writable, disabling user-level cache features.
+warning: /Users/nanshengtu/Library/org.swift.swiftpm/security is not accessible or not writable, disabling user-level cache features.
+[0/1] Planning build
+Building for production...
+[0/4] Write sources
+[1/4] Write swift-version--58304C5D6DBC2206.txt
+[3/5] Compiling AXInspector main.swift
+[3/5] Write Objects.LinkFileList
+[4/5] Linking AXInspector
+Build of product 'AXInspector' complete! (0.78s)
+/Users/nanshengtu/Documents/New project/AIUsageAuditor/build/AI Usage Auditor.app: replacing existing signature
+Built: /Users/nanshengtu/Documents/New project/AIUsageAuditor/build/AI Usage Auditor.app

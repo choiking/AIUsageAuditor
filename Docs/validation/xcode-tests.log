@@ -1,0 +1,90 @@
+Test Suite 'All tests' started at 2026-09-13 13:04:40.022.
+Test Suite 'AuditorTests.xctest' started at 2026-09-13 13:04:40.022.
+Test Suite 'MatchingTests' started at 2026-09-13 13:04:40.023.
+Test Case '-[AuditorTests.MatchingTests testAmbiguousRoleFailsClosed]' started.
+Test Case '-[AuditorTests.MatchingTests testAmbiguousRoleFailsClosed]' passed (0.002 seconds).
+Test Case '-[AuditorTests.MatchingTests testConversationScopeExcludesSidebar]' started.
+Test Case '-[AuditorTests.MatchingTests testConversationScopeExcludesSidebar]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MatchingTests testDefaultConfigurationRoundTrips]' started.
+Test Case '-[AuditorTests.MatchingTests testDefaultConfigurationRoundTrips]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MatchingTests testDocumentIdentityIgnoresTitleAndRejectsForeignHosts]' started.
+Test Case '-[AuditorTests.MatchingTests testDocumentIdentityIgnoresTitleAndRejectsForeignHosts]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MatchingTests testExtractsRolesExcludesDraftsAndButtons]' started.
+Test Case '-[AuditorTests.MatchingTests testExtractsRolesExcludesDraftsAndButtons]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MatchingTests testGenericChatGPTGroupDoesNotSwallowWholeConversation]' started.
+Test Case '-[AuditorTests.MatchingTests testGenericChatGPTGroupDoesNotSwallowWholeConversation]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MatchingTests testInvalidConfigurationRejected]' started.
+Test Case '-[AuditorTests.MatchingTests testInvalidConfigurationRejected]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MatchingTests testNestedTextNotCountedTwiceAndRepeatsPreserved]' started.
+Test Case '-[AuditorTests.MatchingTests testNestedTextNotCountedTwiceAndRepeatsPreserved]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MatchingTests testNoAlternationGuessForUnlabeledText]' started.
+Test Case '-[AuditorTests.MatchingTests testNoAlternationGuessForUnlabeledText]' passed (0.003 seconds).
+Test Suite 'MatchingTests' passed at 2026-09-13 13:04:40.033.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Suite 'MultiAppTests' started at 2026-09-13 13:04:40.033.
+Test Case '-[AuditorTests.MultiAppTests testClaudeDoesNotGuessRolesFromArbitraryText]' started.
+Test Case '-[AuditorTests.MultiAppTests testClaudeDoesNotGuessRolesFromArbitraryText]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MultiAppTests testClaudeGeneratingAndHostIsolation]' started.
+Test Case '-[AuditorTests.MultiAppTests testClaudeGeneratingAndHostIsolation]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MultiAppTests testClaudeObservedStructureExcludesPreviewToolbarSidebarAndDraft]' started.
+Test Case '-[AuditorTests.MultiAppTests testClaudeObservedStructureExcludesPreviewToolbarSidebarAndDraft]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MultiAppTests testClaudeUnknownRoleFailsClosed]' started.
+Test Case '-[AuditorTests.MultiAppTests testClaudeUnknownRoleFailsClosed]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MultiAppTests testConfigurationsRoundTripAndRejectUnsupportedApps]' started.
+Test Case '-[AuditorTests.MultiAppTests testConfigurationsRoundTripAndRejectUnsupportedApps]' passed (0.000 seconds).
+Test Case '-[AuditorTests.MultiAppTests testInterleavedAppsHaveSeparateRequestsOutputsAndTotals]' started.
+Test Case '-[AuditorTests.MultiAppTests testInterleavedAppsHaveSeparateRequestsOutputsAndTotals]' passed (0.002 seconds).
+Test Case '-[AuditorTests.MultiAppTests testLegacyLedgerDefaultsToChatGPTWithoutLosingDedupKeys]' started.
+Test Case '-[AuditorTests.MultiAppTests testLegacyLedgerDefaultsToChatGPTWithoutLosingDedupKeys]' passed (0.001 seconds).
+Test Case '-[AuditorTests.MultiAppTests testSuspendingOneAppDoesNotResetTheOther]' started.
+Test Case '-[AuditorTests.MultiAppTests testSuspendingOneAppDoesNotResetTheOther]' passed (0.001 seconds).
+Test Suite 'MultiAppTests' passed at 2026-09-13 13:04:40.040.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.006 (0.008) seconds
+Test Suite 'PersistenceTests' started at 2026-09-13 13:04:40.040.
+Test Case '-[AuditorTests.PersistenceTests testAtomicRoundTripAndOptionalMetadata]' started.
+Test Case '-[AuditorTests.PersistenceTests testAtomicRoundTripAndOptionalMetadata]' passed (0.001 seconds).
+Test Case '-[AuditorTests.PersistenceTests testCorruptionIsReportedAndNotOverwritten]' started.
+Test Case '-[AuditorTests.PersistenceTests testCorruptionIsReportedAndNotOverwritten]' passed (0.001 seconds).
+Test Case '-[AuditorTests.PersistenceTests testHeuristicHandlesEmptyASCIIChineseEmoji]' started.
+Test Case '-[AuditorTests.PersistenceTests testHeuristicHandlesEmptyASCIIChineseEmoji]' passed (0.000 seconds).
+Test Case '-[AuditorTests.PersistenceTests testLocalDayBoundary]' started.
+Test Case '-[AuditorTests.PersistenceTests testLocalDayBoundary]' passed (0.000 seconds).
+Test Suite 'PersistenceTests' passed at 2026-09-13 13:04:40.043.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'TrackerTests' started at 2026-09-13 13:04:40.044.
+Test Case '-[AuditorTests.TrackerTests testExistingHistoryIsBaseline]' started.
+Test Case '-[AuditorTests.TrackerTests testExistingHistoryIsBaseline]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testMultipleTurnsKeepCorrectParentRequests]' started.
+Test Case '-[AuditorTests.TrackerTests testMultipleTurnsKeepCorrectParentRequests]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testOldPromptNewAnswerIsNotAttributedToNewRequest]' started.
+Test Case '-[AuditorTests.TrackerTests testOldPromptNewAnswerIsNotAttributedToNewRequest]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testPrependEditAndShrinkRebaseWithoutCountingHistory]' started.
+Test Case '-[AuditorTests.TrackerTests testPrependEditAndShrinkRebaseWithoutCountingHistory]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testPreviouslySeenHistoryReappearingAfterEmptySnapshotIsNotCounted]' started.
+Test Case '-[AuditorTests.TrackerTests testPreviouslySeenHistoryReappearingAfterEmptySnapshotIsNotCounted]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testRepeatedIdenticalPromptsAreSeparateRequests]' started.
+Test Case '-[AuditorTests.TrackerTests testRepeatedIdenticalPromptsAreSeparateRequests]' passed (0.002 seconds).
+Test Case '-[AuditorTests.TrackerTests testSendConfirmedAndStreamingUpsertsOneOutput]' started.
+Test Case '-[AuditorTests.TrackerTests testSendConfirmedAndStreamingUpsertsOneOutput]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testSuspensionDropsUnobservedUsage]' started.
+Test Case '-[AuditorTests.TrackerTests testSuspensionDropsUnobservedUsage]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testSwitchingAndRestartDoNotRecountHistory]' started.
+Test Case '-[AuditorTests.TrackerTests testSwitchingAndRestartDoNotRecountHistory]' passed (0.001 seconds).
+Test Case '-[AuditorTests.TrackerTests testTransientNewNodeIsNotCounted]' started.
+Test Case '-[AuditorTests.TrackerTests testTransientNewNodeIsNotCounted]' passed (0.001 seconds).
+Test Suite 'TrackerTests' passed at 2026-09-13 13:04:40.054.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.010 (0.011) seconds
+Test Suite 'AuditorTests.xctest' passed at 2026-09-13 13:04:40.055.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.027 (0.032) seconds
+Test Suite 'All tests' passed at 2026-09-13 13:04:40.055.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 0.027 (0.032) seconds
+2026-09-13 13:04:40.328 xcodebuild[49881:22206607] [MT] IDETestOperationsObserverDebug: 1.806 elapsed -- Testing started completed.
+2026-09-13 13:04:40.328 xcodebuild[49881:22206607] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-13 13:04:40.328 xcodebuild[49881:22206607] [MT] IDETestOperationsObserverDebug: 1.806 sec, +1.806 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/nanshengtu/Documents/New project/AIUsageAuditor/.build/Xcode/Logs/Test/Test-AIUsageAuditor-2026.09.13_13-04-29-+0800.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

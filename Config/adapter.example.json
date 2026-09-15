@@ -1,0 +1,57 @@
+{
+  "assistantRules" : [
+    {
+      "identifierPattern" : "(?i)^(assistant[-_]message|message[-_]assistant)([-_:].*)?$",
+      "roles" : [
+
+      ]
+    },
+    {
+      "labelPattern" : "(?i)^(chatgpt said|ChatGPT 说)[:：]?$",
+      "roles" : [
+        "AXGroup"
+      ]
+    }
+  ],
+  "bundleIdentifier" : "com.openai.chat",
+  "conversationRules" : [
+
+  ],
+  "excludedRoles" : [
+    "AXTextArea",
+    "AXTextField",
+    "AXComboBox",
+    "AXButton",
+    "AXMenu",
+    "AXToolbar"
+  ],
+  "generationRules" : [
+    {
+      "labelPattern" : "(?i)^(stop generating|stop response|停止生成|停止回答)$",
+      "roles" : [
+        "AXButton"
+      ]
+    }
+  ],
+  "maxDepth" : 40,
+  "maxNodes" : 6000,
+  "pollInterval" : 1.5,
+  "settlingSeconds" : 3,
+  "textRoles" : [
+    "AXStaticText"
+  ],
+  "userRules" : [
+    {
+      "identifierPattern" : "(?i)^(user[-_]message|message[-_]user)([-_:].*)?$",
+      "roles" : [
+
+      ]
+    },
+    {
+      "labelPattern" : "(?i)^(you said|你说)[:：]?$",
+      "roles" : [
+        "AXGroup"
+      ]
+    }
+  ]
+}

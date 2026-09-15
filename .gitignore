@@ -1,0 +1,10 @@
+.build/
+.swiftpm/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+.proxy-lab/
+.log-lab/
+__pycache__/

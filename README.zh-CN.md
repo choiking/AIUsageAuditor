@@ -9,6 +9,12 @@
 > **这里显示的是日志记录的 token 数，既不是你的订阅额度，也不是账单。**
 > 它只覆盖 Claude 编程 agent 和 Codex 会话，不包含普通的 Claude 和 ChatGPT 对话，也不做任何费用计算。
 
+## 界面截图
+
+![AI Usage Auditor 面板](Docs/images/dashboard.png)
+
+今日全部日志来源的合计，并按日志入口分类展开。
+
 ## 安装
 
 从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **AI Usage Auditor.app** 拖进「应用程序」。

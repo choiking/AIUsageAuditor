@@ -9,6 +9,12 @@ No API key, proxy, certificate, or Accessibility permission required. Nothing le
 > **These are log-reported tokens — not your subscription quota, and not a bill.**
 > They cover Claude programming-agent and Codex sessions only. Ordinary Claude and ChatGPT chats are not included. No cost is calculated.
 
+## Screenshot
+
+![AI Usage Auditor dashboard](Docs/images/dashboard.png)
+
+Today's totals across all log sources, broken down by entry point. The interface is currently in Chinese only.
+
 ## Install
 
 Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **AI Usage Auditor.app** to Applications.

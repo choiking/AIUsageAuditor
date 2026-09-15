@@ -84,6 +84,15 @@ final class AuditorModel: ObservableObject {
     /// Tools that have a row; both are always shown so an empty one reads as
     /// "no records found" rather than silently disappearing.
     var tools: [LogTool] { LogTool.allCases }
+    /// Categories start folded; expansion is per-run and deliberately not persisted.
+    @Published private(set) var expandedTools: Set<LogTool> = []
+    func isExpanded(_ tool: LogTool) -> Bool { expandedTools.contains(tool) }
+    func toggleExpansion(_ tool: LogTool) {
+        guard expandedTools.contains(tool) else { expandedTools.insert(tool); return }
+        expandedTools.remove(tool)
+        // Never leave the details pane describing a row the list no longer shows.
+        if case .source(let source) = selection, source.tool == tool { selection = .tool(tool) }
+    }
     func sources(in tool: LogTool) -> [LogSource] { sources.filter { $0.tool == tool } }
     func events(for selection: MeterSelection, today: Bool? = nil) -> [LogEvent] {
         let daily = today ?? (period == .today)

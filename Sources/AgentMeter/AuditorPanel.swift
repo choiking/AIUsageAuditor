@@ -48,9 +48,11 @@ struct AuditorPanel: View {
                     ForEach(model.tools) { tool in
                         VStack(alignment: .leading, spacing: 6) {
                             row(for: .tool(tool), emphasised: true)
-                            ForEach(model.sources(in: tool)) { source in
-                                row(for: .source(source), emphasised: false)
-                                    .padding(.leading, 14)
+                            if model.isExpanded(tool) {
+                                ForEach(model.sources(in: tool)) { source in
+                                    row(for: .source(source), emphasised: false)
+                                        .padding(.leading, 14)
+                                }
                             }
                         }
                     }
@@ -125,11 +127,22 @@ struct AuditorPanel: View {
         let totals = model.totals(for: selection)
         let selected = model.selection == selection
         let present = model.events.contains { selection.contains($0.source) }
-        Button { model.selection = selection } label: {
+        Button {
+            model.selection = selection
+            if case .tool(let tool) = selection { model.toggleExpansion(tool) }
+        } label: {
             VStack(alignment: .leading, spacing: 5) {
-                HStack {
+                HStack(spacing: 6) {
+                    if case .tool(let tool) = selection {
+                        Image(systemName: model.isExpanded(tool) ? "chevron.down" : "chevron.right")
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                            .frame(width: 10)
+                    }
                     Text(selection.name)
                         .font(emphasised ? .callout.weight(.semibold) : .caption.weight(.semibold))
+                    if case .tool(let tool) = selection, !model.isExpanded(tool) {
+                        Text("\(model.sources(in: tool).count) 项").font(.caption2).foregroundStyle(.secondary)
+                    }
                     Spacer()
                     if selected { Image(systemName: "checkmark.circle.fill").foregroundStyle(.teal) }
                 }
@@ -150,6 +163,7 @@ struct AuditorPanel: View {
                                      : Color.primary.opacity(emphasised ? 0.06 : 0.03),
                             in: RoundedRectangle(cornerRadius: emphasised ? 11 : 9))
         }.buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.15), value: model.expandedTools)
     }
 
     /// List-price estimate. Deliberately never called spend: the logs record no

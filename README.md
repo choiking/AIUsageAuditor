@@ -37,6 +37,8 @@ open "build/Agent Meter.app" --args --show
 
 The dashboard has two tabs: **Usage** (用量) and **Analysis** (分析). Usage has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
 
+The source list is two levels. **Claude Code** and **Codex** are the top-level categories, each showing that tool's combined totals; the entrypoint rows below each one break it down by where the usage came from. Selecting either level changes the details pane — a tool's figures are exactly the sum of its entrypoint rows.
+
 The first scan imports retained history. After that it checks every five seconds and reads only appended bytes. Pause stops scanning for this run; resuming backfills. Selecting a source changes the details, not what is monitored.
 
 **Zero records for a period means no eligible local records were found — not that the account consumed nothing.** Check the source's last usage timestamp to tell old history from fresh usage.

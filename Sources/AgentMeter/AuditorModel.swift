@@ -24,6 +24,31 @@ private actor LogWorker {
 
 enum AuditorTab: String, CaseIterable { case usage = "用量", analysis = "分析" }
 
+/// Either a whole tool (the top-level category) or one of its entrypoints.
+enum MeterSelection: Hashable {
+    case tool(LogTool)
+    case source(LogSource)
+
+    var tool: LogTool {
+        switch self {
+        case .tool(let tool): return tool
+        case .source(let source): return source.tool
+        }
+    }
+    var name: String {
+        switch self {
+        case .tool(let tool): return tool.name
+        case .source(let source): return source.name
+        }
+    }
+    func contains(_ source: LogSource) -> Bool {
+        switch self {
+        case .tool(let tool): return source.tool == tool
+        case .source(let selected): return source == selected
+        }
+    }
+}
+
 enum LogPeriod: String, CaseIterable { case today = "今日", all = "已导入历史" }
 
 @MainActor
@@ -33,7 +58,7 @@ final class AuditorModel: ObservableObject {
     @Published private(set) var analysis: ContentAnalysisResult?
     @Published private(set) var analyzing = false
     @Published var period: LogPeriod = .today
-    @Published var selectedSource: LogSource = .codexDesktop
+    @Published var selection: MeterSelection = .tool(.claudeCode)
     @Published var clock = Date()
     @Published private(set) var result: LogScanResult?
     @Published private(set) var error: String?
@@ -56,18 +81,30 @@ final class AuditorModel: ObservableObject {
             (source == nil || e.source == source) && (!daily || e.occurredAt.map { Calendar.current.isDate($0, inSameDayAs: clock) } == true)
         }
     }
+    /// Tools that have a row; both are always shown so an empty one reads as
+    /// "no records found" rather than silently disappearing.
+    var tools: [LogTool] { LogTool.allCases }
+    func sources(in tool: LogTool) -> [LogSource] { sources.filter { $0.tool == tool } }
+    func events(for selection: MeterSelection, today: Bool? = nil) -> [LogEvent] {
+        let daily = today ?? (period == .today)
+        return events.filter { e in
+            selection.contains(e.source) &&
+                (!daily || e.occurredAt.map { Calendar.current.isDate($0, inSameDayAs: clock) } == true)
+        }
+    }
+    func totals(for selection: MeterSelection) -> LogTotals { LogTotals(events: events(for: selection)) }
     var totals: LogTotals { LogTotals(events: filtered()) }
     var today: LogTotals { LogTotals(events: filtered(today: true)) }
     func totals(for source: LogSource) -> LogTotals { LogTotals(events: filtered(source)) }
-    var selectedTotals: LogTotals { totals(for: selectedSource) }
+    var selectedTotals: LogTotals { totals(for: selection) }
     /// User rates override the bundled table; see Pricing.swift.
     private(set) lazy var pricing = PricingTable.load(from: directory.appendingPathComponent("pricing.json"))
     var cost: CostEstimate { pricing.estimate(filtered()) }
-    var selectedCost: CostEstimate { pricing.estimate(filtered(selectedSource)) }
-    var lastUsage: Date? { events.filter { $0.source == selectedSource }.map(\.observedAt).max() }
+    var selectedCost: CostEstimate { pricing.estimate(events(for: selection)) }
+    var lastUsage: Date? { events.filter { selection.contains($0.source) }.map(\.observedAt).max() }
     var provenance: String {
-        let values = Set(events.filter { $0.source == selectedSource }.map(\.provenance)).sorted()
-        let key = selectedSource.tool == .claudeCode ? "entrypoint" : "originator"
+        let values = Set(events.filter { selection.contains($0.source) }.map(\.provenance)).sorted()
+        let key = selection.tool.provenanceKey
         return key + " = " + (values.isEmpty ? "未发现记录" : values.joined(separator: ", "))
     }
     var menuTitle: String {
@@ -173,6 +210,6 @@ final class AuditorModel: ObservableObject {
     }
     func openDataFolder() { NSWorkspace.shared.open(directory) }
     func openLogFolder() {
-        NSWorkspace.shared.open(selectedSource.tool == .claudeCode ? LogRoots.standard.claude : LogRoots.standard.codex)
+        NSWorkspace.shared.open(selection.tool == .claudeCode ? LogRoots.standard.claude : LogRoots.standard.codex)
     }
 }

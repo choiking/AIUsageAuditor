@@ -1,7 +1,24 @@
 import Foundation
 import CoreFoundation
 
-public enum LogTool: String, Codable { case claudeCode, codex }
+public enum LogTool: String, Codable, CaseIterable, Identifiable {
+    case claudeCode, codex
+    public var id: String { rawValue }
+    /// Top-level grouping label; the per-entrypoint rows sit under it.
+    public var name: String {
+        switch self {
+        case .claudeCode: return "Claude Code"
+        case .codex: return "Codex"
+        }
+    }
+    /// The entrypoint field this tool records its origin in.
+    public var provenanceKey: String {
+        switch self {
+        case .claudeCode: return "entrypoint"
+        case .codex: return "originator"
+        }
+    }
+}
 public enum LogSource: String, Codable, CaseIterable, Identifiable {
     case claudeDesktop, claudeCLI, claudeIDE, claudeSDK, claudeUnknown
     case codexDesktop, codexCLI, codexIDE, codexSDK, codexBrowser, codexUnknown

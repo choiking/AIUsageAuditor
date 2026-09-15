@@ -43,44 +43,28 @@ struct AuditorPanel: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }.padding(16).background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 14))
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("按日志入口分类").font(.subheadline.weight(.semibold))
-                    ForEach(model.sources) { source in
-                        let totals = model.totals(for: source)
-                        Button { model.selectedSource = source } label: {
-                            VStack(alignment: .leading, spacing: 5) {
-                                HStack {
-                                    Text(source.name).fontWeight(.semibold)
-                                    Spacer()
-                                    if model.selectedSource == source { Image(systemName: "checkmark.circle.fill").foregroundStyle(.teal) }
-                                }
-                                if source == .claudeDesktop {
-                                    Text("不包含普通 Chat 聊天").foregroundStyle(.secondary)
-                                }
-                                if model.events.contains(where: { $0.source == source }) {
-                                    if totals.records == 0 {
-                                        Text("当前期间暂无可计入的日志用量").foregroundStyle(.secondary)
-                                    } else {
-                                        Text("↑ \(totals.input.formatted())   ↓ \(totals.output.formatted())   · \(totals.records) 条")
-                                            .monospacedDigit().foregroundStyle(.secondary)
-                                    }
-                                } else { Text("未发现用量记录").foregroundStyle(.secondary) }
-                            }.font(.caption).padding(10).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(model.selectedSource == source ? .teal.opacity(0.10) : Color.primary.opacity(0.03),
-                                            in: RoundedRectangle(cornerRadius: 9))
-                        }.buttonStyle(.plain)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("按工具与日志入口分类").font(.subheadline.weight(.semibold))
+                    ForEach(model.tools) { tool in
+                        VStack(alignment: .leading, spacing: 6) {
+                            row(for: .tool(tool), emphasised: true)
+                            ForEach(model.sources(in: tool)) { source in
+                                row(for: .source(source), emphasised: false)
+                                    .padding(.leading, 14)
+                            }
+                        }
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 9) {
-                    Text(model.selectedSource.name).font(.subheadline.weight(.semibold))
+                    Text(model.selection.name).font(.subheadline.weight(.semibold))
                     Text(model.provenance).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     detail("缓存读取 · 输入的一部分", value: model.selectedTotals.cacheRead,
                            unknown: model.selectedTotals.missingCache)
                     detail("缓存写入 · 输入的一部分", value: model.selectedTotals.cacheWrite,
                            unknown: model.selectedTotals.missingCache)
-                    if model.selectedSource.tool == .codex {
+                    if model.selection.tool == .codex {
                         detail("推理 · 输出的一部分", value: model.selectedTotals.reasoning,
                                unknown: model.selectedTotals.missingReasoning)
                     }
@@ -135,6 +119,39 @@ struct AuditorPanel: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
+    /// One selectable row. `emphasised` marks the top-level tool category,
+    /// whose totals are the sum of the entrypoint rows nested under it.
+    @ViewBuilder private func row(for selection: MeterSelection, emphasised: Bool) -> some View {
+        let totals = model.totals(for: selection)
+        let selected = model.selection == selection
+        let present = model.events.contains { selection.contains($0.source) }
+        Button { model.selection = selection } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(selection.name)
+                        .font(emphasised ? .callout.weight(.semibold) : .caption.weight(.semibold))
+                    Spacer()
+                    if selected { Image(systemName: "checkmark.circle.fill").foregroundStyle(.teal) }
+                }
+                if case .source(.claudeDesktop) = selection {
+                    Text("不包含普通 Chat 聊天").foregroundStyle(.secondary)
+                }
+                if present {
+                    if totals.records == 0 {
+                        Text("当前期间暂无可计入的日志用量").foregroundStyle(.secondary)
+                    } else {
+                        Text("↑ \(totals.input.formatted())   ↓ \(totals.output.formatted())   · \(totals.records) 条")
+                            .monospacedDigit().foregroundStyle(.secondary)
+                    }
+                } else { Text("未发现用量记录").foregroundStyle(.secondary) }
+            }.font(.caption).padding(emphasised ? 12 : 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(selected ? .teal.opacity(0.10)
+                                     : Color.primary.opacity(emphasised ? 0.06 : 0.03),
+                            in: RoundedRectangle(cornerRadius: emphasised ? 11 : 9))
+        }.buttonStyle(.plain)
+    }
+
     /// List-price estimate. Deliberately never called spend: the logs record no
     /// billing mode, so a subscription user pays a flat fee regardless of this.
     @ViewBuilder private var costRow: some View {

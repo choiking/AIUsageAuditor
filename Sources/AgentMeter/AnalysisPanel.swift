@@ -1,17 +1,37 @@
 import SwiftUI
 import AuditorCore
 
+/// Analysis is filtered by tool, not by individual entrypoint: the per-entrypoint
+/// split matters for token accounting, not for what was being asked about.
+/// Modelled as three explicit cases rather than an optional so that the
+/// segmented picker has an unambiguous tag for "all".
+enum AnalysisScope: String, CaseIterable, Identifiable {
+    case all = "全部来源", claudeCode = "Claude Code", codex = "Codex"
+    var id: String { rawValue }
+    var tool: LogTool? {
+        switch self {
+        case .all: return nil
+        case .claudeCode: return .claudeCode
+        case .codex: return .codex
+        }
+    }
+    func contains(_ source: LogSource) -> Bool {
+        guard let tool else { return true }
+        return source.tool == tool
+    }
+}
+
 struct AnalysisPanel: View {
     @ObservedObject var model: AuditorModel
     @State private var category: ContentCategory?
-    @State private var source: LogSource?
+    @State private var scope: AnalysisScope = .all
     @State private var query = ""
     @State private var limit = 30
     @State private var expanded: String?
 
     private var records: [ContentRecord] {
         (model.analysis?.filtered(today: model.period == .today, now: model.clock) ?? [])
-            .filter { source == nil || $0.source == source }
+            .filter { scope.contains($0.source) }
     }
     private var prompts: [ContentRecord] { records.filter { $0.kind == .prompt } }
     private var matches: [ContentRecord] {
@@ -31,10 +51,9 @@ struct AnalysisPanel: View {
             }
             Text("按用户提示词归类 · 本地关键词规则，可能误分")
                 .font(.caption).foregroundStyle(.secondary)
-            Picker("应用来源", selection: $source) {
-                Text("全部来源").tag(Optional<LogSource>.none)
-                ForEach(LogSource.allCases.filter { s in model.analysis?.records.contains { $0.source == s } == true }) { s in
-                    Text(s.name).tag(Optional(s))
+            Picker("应用来源", selection: $scope) {
+                ForEach(AnalysisScope.allCases) { scope in
+                    Text(scope.rawValue).tag(scope)
                 }
             }
             if let analysis = model.analysis {
@@ -136,7 +155,7 @@ struct AnalysisPanel: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .onChange(of: model.period) { _ in resetList() }
-        .onChange(of: source) { _ in resetList() }
+        .onChange(of: scope) { _ in resetList() }
         .onChange(of: query) { _ in resetList() }
     }
     private func resetList() { limit = 30; expanded = nil }

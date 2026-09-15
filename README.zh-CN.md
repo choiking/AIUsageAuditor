@@ -1,0 +1,113 @@
+# AI Usage Auditor（AI 用量审计器）
+
+[English](README.md) · [中文](README.zh-CN.md)
+
+一款本地运行的 macOS 菜单栏应用，读取 **Claude Code** 和 **Codex** 的日志文件，按产生来源分组展示日志中记录的 token 用量。
+
+无需 API key、代理、证书或「辅助功能」权限。所有数据都不会离开你的电脑。
+
+> **这里显示的是日志记录的 token 数，既不是你的订阅额度，也不是账单。**
+> 它只覆盖 Claude 编程 agent 和 Codex 会话，不包含普通的 Claude 和 ChatGPT 对话，也不做任何费用计算。
+
+## 安装
+
+从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **AI Usage Auditor.app** 拖进「应用程序」。
+
+该构建使用 ad-hoc 签名且未经过公证（notarize），因此首次打开时会被 macOS 拦截，提示信息常常会误导性地说应用「已损坏」。这其实只是隔离（quarantine）标记。**右键点击应用 → 打开 → 打开**，或执行：
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/AI Usage Auditor.app"
+```
+
+需要 **Apple Silicon** 芯片和 **macOS 13 及以上**。Intel 芯片和 macOS 13 上的实际表现未经验证。从源码自行构建则完全不会遇到上述 Gatekeeper 拦截。
+
+## 使用
+
+点击菜单栏上的 token 总数即可打开面板。也可以直接显示：
+
+```sh
+open "build/AI Usage Auditor.app" --args --show
+```
+
+面板分为 **Today（今天）** 和 **Imported history（导入的历史）** 两个区间，展示输入/输出总量、缓存明细、Codex 推理（reasoning）明细、各来源的记录数、最近一次用量时间，以及明确的数据质量警告。无论面板切换到哪个区间，菜单栏始终显示今天已接受的输入/输出。
+
+首次扫描会导入保留下来的历史记录。之后每五秒检查一次，且只读取新追加的字节。暂停会停止本次运行的扫描，恢复后会补齐期间的数据。切换来源只改变展示的明细，不改变监控范围。
+
+**某个区间显示为零，意味着没有找到该区间的有效本地记录，而不是说账号没有产生任何消耗。** 可以通过来源的「最近用量时间」来区分陈旧历史和新近用量。
+
+## 数据来源
+
+| 路径 | 读取字段 |
+| --- | --- |
+| `~/.claude/projects/**/*.jsonl`（含 subagent 日志） | `assistant.message.usage` |
+| `~/.codex/sessions/**/rollout-*.jsonl`<br>`~/.codex/archived_sessions/**/rollout-*.jsonl` | `event_msg` → `token_count` → `payload.info` |
+
+若在应用的启动环境中设置了 `CLAUDE_CONFIG_DIR` 和 `CODEX_HOME`，会覆盖对应的基础目录。通过访达（Finder）启动时可能无法继承终端里的环境变量。
+
+来源分类完全依据日志中记录的入口点，绝不根据进程名猜测：
+
+| 日志元数据 | 显示为 |
+| --- | --- |
+| Claude `entrypoint = claude-desktop` | Claude 桌面端 agent |
+| Claude `cli` | Claude Code CLI |
+| Claude `claude-vscode` / `vscode` | Claude Code IDE |
+| Claude `sdk-cli` / `sdk` | Claude Code SDK |
+| Codex `originator = Codex Desktop` / `codex_work_desktop` | Codex Desktop |
+| Codex `codex_cli_rs` / `codex-tui` / `codex_exec` | Codex CLI / Exec |
+| Codex `codex_vscode` | Codex VS Code |
+| Codex `codex_sdk_ts` | Codex SDK |
+| Codex `codex-chrome-extension-sidepanel` | Codex 浏览器扩展 |
+| 缺失或无法识别 | 未知来源 |
+
+这里有两点需要说明。其一，Codex 中笼统的 `source: vscode` 不会覆盖明确的 `originator: Codex Desktop`。其二，`claude-desktop` 入口点只能证明这是一条来自桌面端的 **agent** 日志，并不意味着所有桌面端对话都会被记录——常规的 Chat 标签页是被排除在外的。分类依据的是记录下来的入口点，而非客户端用的是 API key 还是订阅登录。应用不会读取任何凭据来推断计费方式。
+
+## 计数方式
+
+**Claude。** 流式快照和复制产生的历史记录，会基于哈希后的 request/message ID 做全局去重，保留时间戳最新的一条。时间相同但内容冲突的快照会被排除，直到出现更新的记录。输入 = 未缓存输入 + 缓存读取输入 + 缓存创建输入；输出按日志报告值计。各项明细已经包含在输入之内。
+
+**Codex。** 用量取同一会话中相邻累计计数器的差值。重复的总计值和仅含限流信息的事件不会增加用量。`last_token_usage` 不会被单独累加。缓存计数属于输入明细，reasoning 属于输出明细，`total_tokens` 则直接采用。任一被跟踪字段出现计数回退，该会话会被整体排除并给出警告——是否属于计数器重置，这里刻意不做自动判断。
+
+**日期。** 以日志时间戳确定本地自然日。Codex 会话的首个累计快照如果与其最后一次调用对不上，可能是继承或被裁剪过的历史，因此只计入历史，不计入今天。
+
+这里的一条「记录」指的是一次去重后的用量增量，不一定对应一条消息、一次请求或一行账单。缺失的可选计数器会标注为「部分未报告」；格式错误的记录会显示为排除项，而不会被编造成零。
+
+## 隐私
+
+账本文件位于 `~/Library/Application Support/AIUsageAuditor/log-usage.json`，以原子方式写入，文件权限 `0600`，目录权限 `0700`。其中仅保存数值快照、时间戳、已识别的来源元数据、哈希后的标识和读取检查点。
+
+**它绝不保存 prompt、模型回复、工具输出、项目路径、原始 session/request ID 或任何凭据。** 源 JSONL 文件本身确实包含对话内容，但解析全程在本地内存中完成。`diagnostics.json` 只记录聚合的扫描状态和各来源计数。
+
+读取检查点只在整行完整时才推进。不完整的追加写入会重试；被原地替换或截断的文件会重新构建；来自已删除或已轮转路径的、已脱敏的历史记录会保留。账本损坏时会原样保留并停止导入；写入失败不会让未保存的总数生效。运行中的应用会在 `log-usage.lock` 上持有一个建议性写锁。
+
+## 构建
+
+```sh
+./scripts/test.sh --disable-sandbox
+./scripts/build-app.sh --disable-sandbox
+```
+
+`--disable-sandbox` 针对的是 SwiftPM 的构建过程，与应用权限无关。`AUDITOR_BUILD_ROOT` 可覆盖构建缓存位置；Xcode 的共享 scheme 名为 `AIUsageAuditor`。
+
+```sh
+./build/LogInspector                                  # 与 GUI 相同的扫描器，默认不持久化
+./build/LogInspector --state /tmp/auditor-check.json  # 临时文件——切勿指向正在使用的账本
+python3 scripts/generate_project.py                   # 重新生成 Xcode 工程
+```
+
+42 个 Swift 测试覆盖了来源分类、流式与冲突处理、复制的 fork/归档历史、累计计数器、计数回退、历史归属、部分写入、重启幂等性、删除的历史、文件截断、脱敏、账本损坏和写入失败等场景。
+
+## 局限
+
+- 远程和云端用量只有在本地存在记录时才可见。安装之前的历史无法找回。
+- 这些本地日志格式可能随工具版本变化。
+- 被改写了标识或时间戳的复制历史可能无法去重。原地改写会替换该文件已缓存的记录。
+- 旧记录中缺失的可选计数字段，不会被默认当作「所有记录都会上报」。
+- 每次扫描每个文件最多读取 32 MiB；超过 8 MiB 的单条记录会被跳过。
+- 来源的时间范围并不能证明日志完整保留，也不代表覆盖了账号的全部用量。
+- v0.3 版本不再轮询「辅助功能」，也不再把可见文本的估算值并入总数。遗留的 core 和 inspector 工具仅作参考保留；`scripts/proxy*` 属于实验性工具，应用从不运行它们。
+
+schema 与来源证据见 [`Docs/JSONL_USAGE_VALIDATION.md`](Docs/JSONL_USAGE_VALIDATION.md)，早期针对普通桌面端日志的调查见 [`Docs/LOG_CAPTURE_VALIDATION.md`](Docs/LOG_CAPTURE_VALIDATION.md)。
+
+## 许可证
+
+[MIT](LICENSE)

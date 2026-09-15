@@ -1,42 +1,54 @@
-# AI Usage Auditor — v0.3.1
+# AI Usage Auditor
 
-The Claude Desktop row explicitly excludes the regular **Chat** tab. An
-`entrypoint: claude-desktop` record proves a desktop-origin agent log, not that
-all desktop conversations are logged. Empty periods display “no eligible log
-usage” rather than a misleading numeric zero. At the latest check, the monitored
-Claude JSONL files had not changed since September 8 and their most recent usable
-token record was August 17; sending a regular chat message did not add a record
-to these sources. Additional JSONL under Application Support's
-`local-agent-mode-sessions` was historical too (latest modification July 8) and
-is not part of the current scanner's roots.
+[English](README.md) · [中文](README.zh-CN.md)
 
-A local macOS menu-bar app that reads **Claude programming-agent JSONL and Codex rollout JSONL** and groups reported token usage by the log's `entrypoint` / `originator`. SwiftUI, AppKit and Foundation; no Python runtime, API key, proxy, certificate or Accessibility permission is required by the app.
+A local macOS menu-bar app that reads **Claude Code** and **Codex** log files and shows how many tokens they report using, grouped by which tool produced them.
 
-The dashboard offers **Today** and **Imported history**, input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time and explicit data-quality warnings. These are **log-reported tokens**, not subscription quotas or a billing statement. They do not cover ordinary Claude or ChatGPT chats.
+No API key, proxy, certificate, or Accessibility permission required. Nothing leaves your machine.
 
-## Run
+> **These are log-reported tokens — not your subscription quota, and not a bill.**
+> They cover Claude programming-agent and Codex sessions only. Ordinary Claude and ChatGPT chats are not included. No cost is calculated.
 
-Open `build/AI Usage Auditor.app`, then click its menu-bar token totals. To show the dashboard immediately:
+## Install
+
+Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **AI Usage Auditor.app** to Applications.
+
+The build is ad-hoc signed and not notarized, so macOS blocks it on first launch — often with a misleading "damaged" message. That's the quarantine flag. **Right-click the app → Open → Open**, or:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/AI Usage Auditor.app"
+```
+
+Requires **Apple Silicon** and **macOS 13+**. Intel and macOS 13 behavior are unverified. Building from source avoids the Gatekeeper step entirely.
+
+## Use
+
+Click the token totals in the menu bar to open the dashboard. To show it immediately:
 
 ```sh
 open "build/AI Usage Auditor.app" --args --show
 ```
 
-The first scan imports retained historical logs. Later scans check every five seconds and read only appended bytes. Selecting a source changes the details, not what is monitored. Pause stops scanning for this run; resuming backfills available records. A restart resumes collection. The menu bar always shows today's accepted input/output, regardless of the selected dashboard period.
+The dashboard has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
 
-Zero records for a period means no eligible local records were found for that period, not that the account consumed nothing. The source's last usage timestamp distinguishes old history from fresh usage. Missing optional counters are labeled as partially unreported. Counter regressions and malformed records are shown as exclusions, not fabricated zero usage.
+The first scan imports retained history. After that it checks every five seconds and reads only appended bytes. Pause stops scanning for this run; resuming backfills. Selecting a source changes the details, not what is monitored.
 
-The packaged build targets Apple Silicon/macOS 13+, is locally ad-hoc signed, and is not notarized. Intel and macOS 13 runtime behavior have not been verified.
+**Zero records for a period means no eligible local records were found — not that the account consumed nothing.** Check the source's last usage timestamp to tell old history from fresh usage.
 
-## Read sources and classification
+## Where the data comes from
 
-- `~/.claude/projects/**/*.jsonl`, including subagent logs: `assistant.message.usage`.
-- `~/.codex/sessions/**/rollout-*.jsonl`, plus `~/.codex/archived_sessions/**/rollout-*.jsonl`: `event_msg` → `token_count` → `payload.info`.
-- `CLAUDE_CONFIG_DIR` and `CODEX_HOME` override the respective base directories if set in the app's launch environment. Finder launches may not inherit terminal environment variables.
-
-| Log metadata | Dashboard source |
+| Path | Field read |
 | --- | --- |
-| Claude `entrypoint = claude-desktop` | Claude desktop agent; does not establish which desktop tab |
+| `~/.claude/projects/**/*.jsonl` (incl. subagent logs) | `assistant.message.usage` |
+| `~/.codex/sessions/**/rollout-*.jsonl`<br>`~/.codex/archived_sessions/**/rollout-*.jsonl` | `event_msg` → `token_count` → `payload.info` |
+
+`CLAUDE_CONFIG_DIR` and `CODEX_HOME` override the base directories if set in the app's launch environment. Finder launches may not inherit terminal variables.
+
+Sources are classified by the entry point recorded in the log, never guessed from process names:
+
+| Log metadata | Shown as |
+| --- | --- |
+| Claude `entrypoint = claude-desktop` | Claude desktop agent |
 | Claude `cli` | Claude Code CLI |
 | Claude `claude-vscode` / `vscode` | Claude Code IDE |
 | Claude `sdk-cli` / `sdk` | Claude Code SDK |
@@ -45,46 +57,57 @@ The packaged build targets Apple Silicon/macOS 13+, is locally ad-hoc signed, an
 | Codex `codex_vscode` | Codex VS Code |
 | Codex `codex_sdk_ts` | Codex SDK |
 | Codex `codex-chrome-extension-sidepanel` | Codex browser extension |
-| Missing/unrecognized values | Unknown source, never guessed from process names |
+| Missing or unrecognized | Unknown source |
 
-Codex's generic `source: vscode` does **not** override an explicit `originator: Codex Desktop`. Classification is based on recorded entry points, not on whether the client used an API key or a subscription login. No credentials are read to infer billing mode.
+Two notes on this. Codex's generic `source: vscode` does not override an explicit `originator: Codex Desktop`. And a `claude-desktop` entrypoint proves a desktop-origin *agent* log — it does not mean every desktop conversation is logged; the regular Chat tab is excluded. Classification reflects recorded entry points, not whether the client used an API key or a subscription login. No credentials are read.
 
-## Counting and dates
+## How counting works
 
-- Claude streaming snapshots and copied history are deduplicated globally using hashed request/message IDs. Keep the latest timestamp; conflicting same-time snapshots are excluded until superseded. Input is uncached input + cache-read input + cache-creation input; output is the reported output. The breakdowns are already included in input.
-- Codex uses the difference between consecutive cumulative counters in each session. Repeated totals and rate-limit-only events do not add usage. Exact copied timestamp/usage events are deduplicated across files and fork history. `last_token_usage` is not independently summed. Cache counters are input breakdowns, reasoning is an output breakdown, and `total_tokens` is used directly.
-- A counter regression in any tracked Codex field excludes that entire session; a warning makes this partial coverage visible. Automatic interpretation of resets is deliberately deferred.
-- Log timestamps determine the local calendar day. An initial Codex cumulative snapshot that does not match its last invocation may represent inherited/pruned history: its amount contributes only to history, not today's usage. Source time ranges do not prove complete retention or account-wide coverage.
-- The unit shown as a record is a deduplicated usage record/increment, not necessarily a user message, request or invoice line.
+**Claude.** Streaming snapshots and copied history are deduplicated globally using hashed request/message IDs, keeping the latest timestamp. Conflicting same-time snapshots are excluded until superseded. Input = uncached + cache-read + cache-creation; output is as reported. Breakdowns are already included in input.
 
-## Persistence and privacy
+**Codex.** Usage is the difference between consecutive cumulative counters within a session. Repeated totals and rate-limit-only events add nothing. `last_token_usage` is not separately summed. Cache counters are input breakdowns, reasoning is an output breakdown, and `total_tokens` is used directly. A counter regression in any tracked field excludes that whole session, with a warning — resets are deliberately not auto-interpreted.
 
-The app saves `~/Library/Application Support/AIUsageAuditor/log-usage.json` atomically with file mode `0600` and directory mode `0700`. It contains numeric snapshots, timestamps, recognized source metadata, hashed identities and read checkpoints. It never copies prompts, responses, tool outputs, project paths, raw session/request IDs or credentials into its ledger. Source JSONL documents do contain transcripts; parsing happens locally in memory.
+**Dates.** Log timestamps set the local calendar day. An initial Codex snapshot that doesn't match its last invocation may be inherited or pruned history, so it counts toward history only, not today.
 
-Read checkpoints are advanced only for complete lines. Partial appends are retried, files replaced/truncated in place are rebuilt, and cached sanitized history from removed/rotated paths is retained. Moved copies are deduplicated by logical identity. A corrupted/unsupported ledger is preserved and stops import; a failed write does not publish unsaved totals. The running app holds an advisory writer lock in `log-usage.lock`; the kernel releases it on exit.
+A "record" is a deduplicated usage increment — not necessarily one message, request, or invoice line. Missing optional counters are labeled partially unreported; malformed records appear as exclusions rather than fabricated zeros.
 
-`diagnostics.json` records only aggregate scan status and per-source counters. The legacy `usage.json` and adapter configurations remain untouched. **The v0.3 app no longer polls Accessibility or merges old visible-text estimates into log totals.** Legacy core/inspector utilities remain in the repository for reference.
+## Privacy
 
-## Build and verification
+The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
+
+**It never stores prompts, responses, tool outputs, project paths, raw session/request IDs, or credentials.** The source JSONL files do contain transcripts; parsing happens locally, in memory. `diagnostics.json` records only aggregate scan status and per-source counters.
+
+Read checkpoints advance only for complete lines. Partial appends are retried, files replaced or truncated in place are rebuilt, and sanitized history from removed or rotated paths is kept. A corrupted ledger is preserved and stops import; a failed write does not publish unsaved totals. The running app holds an advisory writer lock in `log-usage.lock`.
+
+## Build
 
 ```sh
 ./scripts/test.sh --disable-sandbox
 ./scripts/build-app.sh --disable-sandbox
-python3 scripts/generate_project.py
-
-# Same native scanner as the GUI; no persistence by default.
-./build/LogInspector
-
-# Optional checkpoint test in a separate scratch file; do not use the app's live ledger.
-./build/LogInspector --state /tmp/auditor-log-check.json
 ```
 
-The `--disable-sandbox` flag concerns SwiftPM's build process, not app permissions. `AUDITOR_BUILD_ROOT` overrides the build cache location. Xcode's shared scheme is `AIUsageAuditor`.
+`--disable-sandbox` concerns SwiftPM's build process, not app permissions. `AUDITOR_BUILD_ROOT` overrides the build cache location; Xcode's shared scheme is `AIUsageAuditor`.
 
-42 Swift tests cover both retained legacy behavior and eleven new log scenarios: origin classification, streaming/conflict resolution, copied fork/archive history, cumulative counters, regressions, initial historical attribution, partial writes, restart idempotency, deleted history, truncation, redaction, corrupt storage and write failure. Native real-data validation found 4,219 accepted records across seven source categories with three Codex sessions excluded at the validation snapshot; counts can change while tools are running.
+```sh
+./build/LogInspector                                  # same scanner as the GUI, no persistence
+./build/LogInspector --state /tmp/auditor-check.json  # scratch file — never the live ledger
+python3 scripts/generate_project.py                   # regenerate the Xcode project
+```
+
+42 Swift tests cover origin classification, streaming and conflict resolution, copied fork/archive history, cumulative counters, regressions, historical attribution, partial writes, restart idempotency, deleted history, truncation, redaction, corrupt storage, and write failure.
 
 ## Limitations
 
-These local storage formats may change between app versions. Remote/cloud usage is visible only if its records are available locally. Missing/deleted history from before installation cannot be recovered. Copied history rewritten with new identities/timestamps may not deduplicate. Rewrites in place replace that file's cached records. Optional counter fields absent in older records are not assumed to be universally reported. Very large files are ingested up to 32 MiB per file per scan and individual records over 8 MiB are skipped. No cost calculation is performed.
+- Remote and cloud usage appears only if records exist locally. History from before installation can't be recovered.
+- These local log formats may change between tool versions.
+- Copied history rewritten with new identities or timestamps may not deduplicate. In-place rewrites replace that file's cached records.
+- Optional counter fields absent from older records are not assumed to be universally reported.
+- Files are ingested up to 32 MiB per file per scan; individual records over 8 MiB are skipped.
+- Source time ranges don't prove complete retention or account-wide coverage.
+- The v0.3 app no longer polls Accessibility or merges visible-text estimates into totals. Legacy core and inspector utilities remain for reference; the `scripts/proxy*` tools are experimental and the app never runs them.
 
-See `Docs/JSONL_USAGE_VALIDATION.md` for schema/provenance evidence and `Docs/LOG_CAPTURE_VALIDATION.md` for the earlier ordinary-desktop-log investigation. The scripts under `scripts/proxy*` and Python JSONL proof are experimental tools; the app does not run them.
+See [`Docs/JSONL_USAGE_VALIDATION.md`](Docs/JSONL_USAGE_VALIDATION.md) for schema and provenance evidence, and [`Docs/LOG_CAPTURE_VALIDATION.md`](Docs/LOG_CAPTURE_VALIDATION.md) for the earlier desktop-log investigation.
+
+## License
+
+[MIT](LICENSE)

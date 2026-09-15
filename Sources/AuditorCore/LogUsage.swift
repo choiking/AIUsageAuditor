@@ -294,16 +294,27 @@ public struct LogTotals {
     public var cacheRead: Int64 = 0
     public var cacheWrite: Int64 = 0
     public var reasoning: Int64 = 0
+    /// Subset of `cacheWrite` written with a 1-hour TTL; Claude only.
+    public var cacheWrite1h: Int64 = 0
     public var records = 0
     public var missingCache = false
     public var missingReasoning = false
+    /// True when any record reported a cache write without its TTL split.
+    public var missingWriteTTL = false
+    /// Input that was neither read from nor written to cache. Cache counters are
+    /// breakdowns of input, so this is the remainder, floored at zero.
+    public var uncachedInput: Int64 { max(0, input - cacheRead - cacheWrite) }
+    /// Remainder of `cacheWrite` after the 1-hour portion.
+    public var cacheWrite5m: Int64 { max(0, cacheWrite - cacheWrite1h) }
     public init(events: [LogEvent]) {
         for e in events {
             input += e.tokens.input; output += e.tokens.output; total += e.tokens.total
             cacheRead += e.tokens.cacheRead ?? 0; cacheWrite += e.tokens.cacheWrite ?? 0
             reasoning += e.tokens.reasoning ?? 0; records += 1
+            cacheWrite1h += e.tokens.cacheWrite1h ?? 0
             missingCache = missingCache || e.tokens.cacheRead == nil || e.tokens.cacheWrite == nil
             missingReasoning = missingReasoning || e.tokens.reasoning == nil
+            missingWriteTTL = missingWriteTTL || (e.tokens.cacheWrite1h == nil && (e.tokens.cacheWrite ?? 0) > 0)
         }
     }
 }

@@ -69,3 +69,68 @@ final class GroupingTests: XCTestCase {
         XCTAssertEqual(LogTool.codex.provenanceKey, "originator")
     }
 }
+
+final class BreakdownTests: XCTestCase {
+    private func claude(input: Int64, read: Int64, write: Int64, write1h: Int64?, output: Int64) -> LogEvent {
+        // Claude reports input as uncached + read + write.
+        LogEvent(id: UUID().uuidString, source: .claudeCLI, provenance: "cli",
+                 observedAt: Date(), occurredAt: Date(),
+                 tokens: LogTokens(input: input + read + write, output: output, cacheRead: read,
+                                   cacheWrite: write, total: input + read + write + output,
+                                   cacheWrite1h: write1h),
+                 model: "claude-opus-5")
+    }
+
+    func testClaudePartsSumToInput() {
+        let totals = LogTotals(events: [claude(input: 2, read: 27_389, write: 12_740, write1h: 12_740, output: 115)])
+        XCTAssertEqual(totals.uncachedInput, 2)
+        XCTAssertEqual(totals.cacheRead, 27_389)
+        XCTAssertEqual(totals.cacheWrite, 12_740)
+        XCTAssertEqual(totals.uncachedInput + totals.cacheRead + totals.cacheWrite, totals.input)
+        XCTAssertEqual(totals.output, 115)
+    }
+
+    func testCacheWriteTTLsSumToCacheWrite() {
+        let totals = LogTotals(events: [claude(input: 0, read: 0, write: 1_000, write1h: 400, output: 0)])
+        XCTAssertEqual(totals.cacheWrite1h, 400)
+        XCTAssertEqual(totals.cacheWrite5m, 600)
+        XCTAssertEqual(totals.cacheWrite1h + totals.cacheWrite5m, totals.cacheWrite)
+        XCTAssertFalse(totals.missingWriteTTL)
+    }
+
+    func testAbsentTTLSplitFallsEntirelyToShortAndIsFlagged() {
+        let totals = LogTotals(events: [claude(input: 0, read: 0, write: 1_000, write1h: nil, output: 0)])
+        XCTAssertEqual(totals.cacheWrite1h, 0)
+        XCTAssertEqual(totals.cacheWrite5m, 1_000)
+        XCTAssertTrue(totals.missingWriteTTL)
+    }
+
+    func testZeroCacheWriteDoesNotFlagMissingTTL() {
+        let totals = LogTotals(events: [claude(input: 5, read: 0, write: 0, write1h: nil, output: 1)])
+        XCTAssertFalse(totals.missingWriteTTL)
+    }
+
+    func testCodexCacheCountersAreSubsetsOfInput() {
+        // Codex reports input_tokens as already inclusive of its cache counters.
+        let event = LogEvent(id: "c", source: .codexCLI, provenance: "codex_cli_rs",
+                             observedAt: Date(), occurredAt: Date(),
+                             tokens: LogTokens(input: 20_464, output: 205, cacheRead: 11_520,
+                                               cacheWrite: 0, reasoning: 52, total: 20_669),
+                             model: "gpt-5.4")
+        let totals = LogTotals(events: [event])
+        XCTAssertEqual(totals.uncachedInput, 8_944)
+        XCTAssertEqual(totals.uncachedInput + totals.cacheRead + totals.cacheWrite, totals.input)
+        XCTAssertEqual(totals.reasoning, 52)
+        XCTAssertEqual(totals.total, 20_669)
+    }
+
+    func testUncachedInputNeverGoesNegative() {
+        // A malformed record claiming more cache than input must floor at zero.
+        let event = LogEvent(id: "x", source: .codexCLI, provenance: "codex_cli_rs",
+                             observedAt: Date(), occurredAt: Date(),
+                             tokens: LogTokens(input: 10, output: 0, cacheRead: 999,
+                                               cacheWrite: 999, total: 10),
+                             model: "gpt-5.4")
+        XCTAssertEqual(LogTotals(events: [event]).uncachedInput, 0)
+    }
+}

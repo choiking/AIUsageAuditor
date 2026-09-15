@@ -62,14 +62,7 @@ struct AuditorPanel: View {
                     Text(model.selection.name).font(.subheadline.weight(.semibold))
                     Text(model.provenance).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-                    detail("缓存读取 · 输入的一部分", value: model.selectedTotals.cacheRead,
-                           unknown: model.selectedTotals.missingCache)
-                    detail("缓存写入 · 输入的一部分", value: model.selectedTotals.cacheWrite,
-                           unknown: model.selectedTotals.missingCache)
-                    if model.selection.tool == .codex {
-                        detail("推理 · 输出的一部分", value: model.selectedTotals.reasoning,
-                               unknown: model.selectedTotals.missingReasoning)
-                    }
+                    breakdown
                     costRow
 
                     if let date = model.lastUsage {
@@ -121,6 +114,37 @@ struct AuditorPanel: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
+    /// Full token breakdown for the selected scope, mirroring the fields the
+    /// log actually reports. Each row names its source field so the number can
+    /// be traced back to the JSONL rather than taken on trust.
+    @ViewBuilder private var breakdown: some View {
+        let totals = model.selectedTotals
+        if model.selection.tool == .claudeCode {
+            detail("未缓存输入", field: "input_tokens", value: totals.uncachedInput, unknown: totals.missingCache)
+            detail("缓存读取", field: "cache_read_input_tokens", value: totals.cacheRead, unknown: totals.missingCache)
+            detail("缓存写入", field: "cache_creation_input_tokens", value: totals.cacheWrite, unknown: totals.missingCache)
+            detail("· 1 小时 TTL", field: "ephemeral_1h_input_tokens", value: totals.cacheWrite1h,
+                   unknown: totals.missingWriteTTL, nested: true)
+            detail("· 5 分钟 TTL", field: "ephemeral_5m_input_tokens", value: totals.cacheWrite5m,
+                   unknown: totals.missingWriteTTL, nested: true)
+            detail("输出", field: "output_tokens", value: totals.output, unknown: false)
+            Text("前三项相加即为 INPUT；两种 TTL 相加即为缓存写入。")
+                .font(.caption2).foregroundStyle(.secondary)
+        } else {
+            detail("输入", field: "input_tokens", value: totals.input, unknown: false)
+            detail("· 其中缓存读取", field: "cached_input_tokens", value: totals.cacheRead,
+                   unknown: totals.missingCache, nested: true)
+            detail("· 其中缓存写入", field: "cache_write_input_tokens", value: totals.cacheWrite,
+                   unknown: totals.missingCache, nested: true)
+            detail("输出", field: "output_tokens", value: totals.output, unknown: false)
+            detail("· 其中推理", field: "reasoning_output_tokens", value: totals.reasoning,
+                   unknown: totals.missingReasoning, nested: true)
+            detail("合计", field: "total_tokens", value: totals.total, unknown: false)
+            Text("缓存与推理是输入 / 输出的细分，已包含在内，不要重复相加。数值为相邻累计计数之差。")
+                .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     /// One selectable row. `emphasised` marks the top-level tool category,
     /// whose totals are the sum of the entrypoint rows nested under it.
     @ViewBuilder private func row(for selection: MeterSelection, emphasised: Bool) -> some View {
@@ -206,11 +230,21 @@ struct AuditorPanel: View {
         return parts.joined(separator: "")
     }
 
-    private func detail(_ title: String, value: Int64, unknown: Bool) -> some View {
-        HStack {
-            Text(title); Spacer()
-            Text(model.selectedTotals.records == 0 ? "—" : (unknown ? "已知 \(value.formatted()) · 部分未上报" : value.formatted()))
+    /// `field` is the JSONL key this number is summed from; showing it keeps the
+    /// panel honest about which reported value each row represents.
+    private func detail(_ title: String, field: String, value: Int64,
+                        unknown: Bool, nested: Bool = false) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(title)
+            Text(field)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.tertiary).lineLimit(1).layoutPriority(-1)
+            Spacer(minLength: 6)
+            Text(model.selectedTotals.records == 0 ? "—"
+                 : (unknown ? "已知 \(value.formatted()) · 部分未上报" : value.formatted()))
                 .monospacedDigit()
-        }.font(.caption).foregroundStyle(.secondary)
+        }
+        .font(.caption).foregroundStyle(nested ? .tertiary : .secondary)
+        .padding(.leading, nested ? 12 : 0)
     }
 }

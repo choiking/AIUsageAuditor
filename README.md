@@ -89,6 +89,36 @@ Two notes on this. Codex's generic `source: vscode` does not override an explici
 
 A "record" is a deduplicated usage increment — not necessarily one message, request, or invoice line. Missing optional counters are labeled partially unreported; malformed records appear as exclusions rather than fabricated zeros.
 
+## Token breakdown
+
+The details pane lists every token counter the selected tool reports, each row labelled with the JSONL field it is summed from, so a figure can be traced back to the log rather than taken on trust.
+
+**Claude Code** reports per-turn usage, and its cache counters are additive parts of input:
+
+| Row | Field |
+| --- | --- |
+| Uncached input | `input_tokens` |
+| Cache read | `cache_read_input_tokens` |
+| Cache write | `cache_creation_input_tokens` |
+| — 1-hour TTL | `cache_creation.ephemeral_1h_input_tokens` |
+| — 5-minute TTL | `cache_creation.ephemeral_5m_input_tokens` |
+| Output | `output_tokens` |
+
+The first three sum to INPUT; the two TTLs sum to cache write.
+
+**Codex** reports cumulative session totals, so each displayed figure is the difference between consecutive counters. Its cache and reasoning counters are breakdowns already contained in input and output:
+
+| Row | Field |
+| --- | --- |
+| Input | `input_tokens` |
+| — of which cache read | `cached_input_tokens` |
+| — of which cache write | `cache_write_input_tokens` |
+| Output | `output_tokens` |
+| — of which reasoning | `reasoning_output_tokens` |
+| Total | `total_tokens` |
+
+Codex reports no cache-write TTL split. A counter absent from a record is shown as partially unreported rather than as zero.
+
 ## Cost estimate
 
 Each source shows what its tokens would cost **at published API list rates**. This is an estimate of list price, not a record of spend:

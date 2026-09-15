@@ -89,6 +89,36 @@ open "build/Agent Meter.app" --args --show
 
 这里的一条「记录」指的是一次去重后的用量增量，不一定对应一条消息、一次请求或一行账单。缺失的可选计数器会标注为「部分未报告」；格式错误的记录会显示为排除项，而不会被编造成零。
 
+## Token 明细
+
+明细区会列出所选工具上报的每一项 token 计数，每行都标注其对应的 JSONL 字段，便于把数字追溯回原始日志，而不是只能选择相信。
+
+**Claude Code** 上报的是每轮的用量，其缓存计数是输入的组成部分：
+
+| 行 | 字段 |
+| --- | --- |
+| 未缓存输入 | `input_tokens` |
+| 缓存读取 | `cache_read_input_tokens` |
+| 缓存写入 | `cache_creation_input_tokens` |
+| — 1 小时 TTL | `cache_creation.ephemeral_1h_input_tokens` |
+| — 5 分钟 TTL | `cache_creation.ephemeral_5m_input_tokens` |
+| 输出 | `output_tokens` |
+
+前三项相加即为 INPUT；两种 TTL 相加即为缓存写入。
+
+**Codex** 上报的是会话累计值，因此显示的每个数字都是相邻计数之差。其缓存与推理计数是已包含在输入 / 输出之内的细分：
+
+| 行 | 字段 |
+| --- | --- |
+| 输入 | `input_tokens` |
+| — 其中缓存读取 | `cached_input_tokens` |
+| — 其中缓存写入 | `cache_write_input_tokens` |
+| 输出 | `output_tokens` |
+| — 其中推理 | `reasoning_output_tokens` |
+| 合计 | `total_tokens` |
+
+Codex 不上报缓存写入的 TTL 拆分。记录中缺失的计数会显示为「部分未上报」，而不会当作零。
+
 ## 费用估算
 
 每个来源都会显示其 token **按公开 API 目录价**折算的金额。这是对目录价的估算，不是实际支出记录：

@@ -35,7 +35,7 @@ Click the token totals in the menu bar to open the dashboard. To show it immedia
 open "build/Agent Meter.app" --args --show
 ```
 
-The dashboard has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
+The dashboard has two tabs: **Usage** (用量) and **Analysis** (分析). Usage has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
 
 The first scan imports retained history. After that it checks every five seconds and reads only appended bytes. Pause stops scanning for this run; resuming backfills. Selecting a source changes the details, not what is monitored.
 
@@ -91,7 +91,9 @@ A "record" is a deduplicated usage increment — not necessarily one message, re
 
 The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` (the folder keeps its original name so history written before the rename to Agent Meter is not orphaned) is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
 
-**It never stores prompts, responses, tool outputs, project paths, raw session/request IDs, or credentials.** The source JSONL files do contain transcripts; parsing happens locally, in memory. `diagnostics.json` records only aggregate scan status and per-source counters.
+**The ledger never stores prompts, responses, tool outputs, project paths, raw session/request IDs, or credentials.** The source JSONL files do contain transcripts; parsing happens locally, in memory. `diagnostics.json` records only aggregate scan status and per-source counters.
+
+The **Analysis** tab is the one place prompt text is handled. Opening it builds an in-memory index of prompts, replies, tool calls and tool errors from the same local JSONL, classifies each prompt by keyword into one of seven categories, and lets you search and read them. That index is built on demand, is never written to disk, and is discarded when the app exits — but the tab does display your prompt text on screen, so treat it like any other window showing your transcripts. The Usage tab and the menu bar read counters only.
 
 Read checkpoints advance only for complete lines. Partial appends are retried, files replaced or truncated in place are rebuilt, and sanitized history from removed or rotated paths is kept. A corrupted ledger is preserved and stops import; a failed write does not publish unsaved totals. The running app holds an advisory writer lock in `log-usage.lock`.
 

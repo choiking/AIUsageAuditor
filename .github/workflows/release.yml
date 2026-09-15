@@ -1,0 +1,70 @@
+name: Release
+
+# Tag a commit to ship it:
+#   git tag v0.3.2 && git push origin v0.3.2
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # required to create the release
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        id: version
+        run: echo "number=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests
+        run: ./scripts/test.sh --disable-sandbox
+
+      - name: Build app bundle
+        run: ./scripts/build-app.sh --disable-sandbox
+
+      - name: Stamp bundle version from tag
+        run: |
+          plist="build/Agent Meter.app/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.number }}" "$plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" "$plist"
+          codesign --force --sign - "build/Agent Meter.app"
+
+      - name: Package
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            "build/Agent Meter.app" \
+            "build/AgentMeter-${GITHUB_REF_NAME}-macos-arm64.zip"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "build/AgentMeter-${GITHUB_REF_NAME}-macos-arm64.zip" \
+            --title "Agent Meter $GITHUB_REF_NAME" \
+            --notes-file - <<'NOTES'
+          Local macOS menu-bar app that reads Claude Code and Codex log files and shows how many tokens they report using, grouped by which tool produced them.
+
+          ## Install
+
+          Download the zip below, unzip, and drag **Agent Meter.app** to Applications.
+
+          This build is **ad-hoc signed and not notarized**, so macOS blocks it on first launch, often with a misleading "damaged" message. That is the quarantine flag. **Right-click the app → Open → Open**, or:
+
+          ```sh
+          xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
+          ```
+
+          Requires **Apple Silicon** and **macOS 13+**.
+
+          ## What it measures
+
+          Reads `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/rollout-*.jsonl`. **If you do not use Claude Code or the Codex CLI locally, you will see almost nothing** — ordinary Claude and ChatGPT chats are not covered. These are log-reported tokens, not a subscription quota and not a bill.
+
+          See the [README](https://github.com/choiking/AIUsageAuditor#readme) for counting rules and limitations.
+          NOTES

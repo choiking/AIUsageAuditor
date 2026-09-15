@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: macos-14   # Apple Silicon; macos-13 is Intel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Run tests
+        run: ./scripts/test.sh --disable-sandbox
+
+      - name: Build app bundle
+        run: ./scripts/build-app.sh --disable-sandbox
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentMeter-${{ github.sha }}
+          path: build/Agent Meter.app
+          retention-days: 14

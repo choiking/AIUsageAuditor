@@ -22,7 +22,24 @@ private actor LogWorker {
     }
 }
 
-enum AuditorTab: String, CaseIterable { case usage = "用量", analysis = "分析" }
+enum AuditorTab: String, CaseIterable, Identifiable {
+    case usage = "用量", analysis = "分析"
+    var id: String { rawValue }
+    var symbol: String {
+        switch self {
+        case .usage: return "gauge.medium"
+        case .analysis: return "text.magnifyingglass"
+        }
+    }
+    /// One-line hint shown under the active tab, so the two pages are
+    /// distinguishable without opening both.
+    var caption: String {
+        switch self {
+        case .usage: return "token 计数与目录价估算"
+        case .analysis: return "prompt 内容索引与分类"
+        }
+    }
+}
 
 /// Either a whole tool (the top-level category) or one of its entrypoints.
 enum MeterSelection: Hashable {

@@ -18,9 +18,7 @@ struct AuditorPanel: View {
                     Spacer()
                     Circle().fill(model.error != nil ? .red : (model.paused ? .orange : .teal)).frame(width: 8, height: 8)
                 }
-                Picker("页面", selection: $model.tab) {
-                    ForEach(AuditorTab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                }.pickerStyle(.segmented)
+                tabBar
                 Picker("统计期间", selection: $model.period) {
                     ForEach(LogPeriod.allCases, id: \.self) { period in Text(model.tab == .analysis && period == .all ? "历史" : period.rawValue).tag(period) }
                 }.pickerStyle(.segmented)
@@ -114,6 +112,39 @@ struct AuditorPanel: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
+    /// Page navigation, styled as an underlined tab bar rather than a second
+    /// segmented picker. The period control below it is a filter, not
+    /// navigation, and the two were previously indistinguishable.
+    @ViewBuilder private var tabBar: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 0) {
+                ForEach(AuditorTab.allCases) { tab in
+                    let active = model.tab == tab
+                    Button {
+                        model.tab = tab
+                    } label: {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 5) {
+                                Image(systemName: tab.symbol).font(.system(size: 11, weight: .semibold))
+                                Text(tab.rawValue).font(.callout.weight(active ? .semibold : .regular))
+                            }
+                            .foregroundStyle(active ? Color.teal : Color.secondary)
+                            .frame(maxWidth: .infinity)
+                            // A continuous hairline with a thicker accent under the
+                            // active tab; equal heights keep the rule aligned.
+                            Capsule().fill(active ? Color.teal : Color.primary.opacity(0.10))
+                                .frame(height: 2)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(active ? [.isButton, .isSelected] : .isButton)
+                }
+            }
+            Text(model.tab.caption).font(.caption2).foregroundStyle(.secondary)
+        }
+        .animation(.easeInOut(duration: 0.15), value: model.tab)
+    }
+
     /// Full token breakdown for the selected scope, mirroring the fields the
     /// log actually reports. Each row names its source field so the number can
     /// be traced back to the JSONL rather than taken on trust.

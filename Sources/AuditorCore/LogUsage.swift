@@ -9,7 +9,7 @@ public enum LogSource: String, Codable, CaseIterable, Identifiable {
     public var tool: LogTool { rawValue.hasPrefix("claude") ? .claudeCode : .codex }
     public var name: String {
         switch self {
-        case .claudeDesktop: return "Claude Code · 桌面端"
+        case .claudeDesktop: return "Claude Code · Desktop"
         case .claudeCLI: return "Claude Code · CLI"
         case .claudeIDE: return "Claude Code · IDE"
         case .claudeSDK: return "Claude Code · SDK"

@@ -12,52 +12,63 @@
 		"4E783A9E10D2A8ABA38CD11C" = {
 			"isa" = "PBXFileReference";
 			"explicitFileType" = "wrapper.application";
-			"path" = "AI Usage Auditor.app";
+			"path" = "Agent Meter.app";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
 		"6C7CCDEB3609F1FAA874E941" = {
 			"isa" = "PBXFileReference";
 			"explicitFileType" = "wrapper.cfbundle";
-			"path" = "AuditorTests.xctest";
+			"path" = "AgentMeterTests.xctest";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
-		"39FFAD6535043276020AE07E" = {
+		"0139BD246F48C6EF96023716" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "Sources/AIUsageAuditor/AIUsageAuditorApp.swift";
+			"path" = "Sources/AgentMeter/AgentMeterApp.swift";
 			"sourceTree" = "SOURCE_ROOT";
 		};
-		"F723EAF1658EE3DD315E58DF" = {
+		"6288E0C9FBF54AF9DDBFF5E9" = {
 			"isa" = "PBXBuildFile";
-			"fileRef" = "39FFAD6535043276020AE07E";
+			"fileRef" = "0139BD246F48C6EF96023716";
 		};
-		"9258179388783157224FDA43" = {
+		"99560014FEF3294129E34556" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "Sources/AIUsageAuditor/AuditorModel.swift";
+			"path" = "Sources/AgentMeter/AnalysisPanel.swift";
 			"sourceTree" = "SOURCE_ROOT";
 		};
-		"3875CC39E9ACDF9DD5D5E2CE" = {
+		"1BDEAD1CEB0E5AFA12211F6E" = {
 			"isa" = "PBXBuildFile";
-			"fileRef" = "9258179388783157224FDA43";
+			"fileRef" = "99560014FEF3294129E34556";
 		};
-		"AF1FBAD074AA821B309DF71D" = {
+		"E925CEA119938D750DD3D206" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "Sources/AIUsageAuditor/AuditorPanel.swift";
+			"path" = "Sources/AgentMeter/AuditorModel.swift";
 			"sourceTree" = "SOURCE_ROOT";
 		};
-		"1E4DC22D062C0482213392D2" = {
+		"FD56BDCC68EACCAAC98FFD56" = {
 			"isa" = "PBXBuildFile";
-			"fileRef" = "AF1FBAD074AA821B309DF71D";
+			"fileRef" = "E925CEA119938D750DD3D206";
+		};
+		"83299FAB0841B51E908B23E7" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/AgentMeter/AuditorPanel.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"D58E81D867395917AEC1ECBC" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "83299FAB0841B51E908B23E7";
 		};
 		"15E7880684D7BA781DC13CAA" = {
 			"isa" = "PBXGroup";
 			"name" = "App";
 			"children" = (
-				"39FFAD6535043276020AE07E",
-				"9258179388783157224FDA43",
-				"AF1FBAD074AA821B309DF71D",
+				"0139BD246F48C6EF96023716",
+				"99560014FEF3294129E34556",
+				"E925CEA119938D750DD3D206",
+				"83299FAB0841B51E908B23E7",
 			);
 			"sourceTree" = "<group>";
 		};
@@ -65,11 +76,22 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = "2147483647";
 			"files" = (
-				"F723EAF1658EE3DD315E58DF",
-				"3875CC39E9ACDF9DD5D5E2CE",
-				"1E4DC22D062C0482213392D2",
+				"6288E0C9FBF54AF9DDBFF5E9",
+				"1BDEAD1CEB0E5AFA12211F6E",
+				"FD56BDCC68EACCAAC98FFD56",
+				"D58E81D867395917AEC1ECBC",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"BEFE7B9E63FE5CF253034559" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Tests/AuditorCoreTests/ContentAnalysisTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"285411DB73AAC26002EA7450" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "BEFE7B9E63FE5CF253034559";
 		};
 		"B29275B1294D2AA872ED1E75" = {
 			"isa" = "PBXFileReference";
@@ -125,6 +147,7 @@
 			"isa" = "PBXGroup";
 			"name" = "Tests";
 			"children" = (
+				"BEFE7B9E63FE5CF253034559",
 				"B29275B1294D2AA872ED1E75",
 				"C34B7F5B1032B4DD386D9D57",
 				"AB3273BD54C8729552653B9D",
@@ -137,6 +160,7 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = "2147483647";
 			"files" = (
+				"285411DB73AAC26002EA7450",
 				"40CF2BBEFFDB9A3AE0FDBBBB",
 				"062138E90CCFD88AABF788D3",
 				"2F29796C8CA73889305132F3",
@@ -192,8 +216,8 @@
 		"E9B2E96ABC5F6856F2BE79CF" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "AI Usage Auditor";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "local.aiusageauditor.app";
+				"PRODUCT_NAME" = "Agent Meter";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.app";
 				"INFOPLIST_FILE" = "Config/Info.plist";
 				"CODE_SIGN_STYLE" = "Automatic";
 				"CODE_SIGN_IDENTITY" = "-";
@@ -215,8 +239,8 @@
 		"5A8C91857F674E16E2724F47" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "AI Usage Auditor";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "local.aiusageauditor.app";
+				"PRODUCT_NAME" = "Agent Meter";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.app";
 				"INFOPLIST_FILE" = "Config/Info.plist";
 				"CODE_SIGN_STYLE" = "Automatic";
 				"CODE_SIGN_IDENTITY" = "-";
@@ -245,8 +269,8 @@
 		"FCB48D8F88BCDB0ED9FADFD7" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "AuditorTests";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "local.aiusageauditor.tests";
+				"PRODUCT_NAME" = "AgentMeterTests";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.tests";
 				"GENERATE_INFOPLIST_FILE" = "YES";
 				"CODE_SIGN_IDENTITY" = "-";
 				"CODE_SIGN_STYLE" = "Automatic";
@@ -265,8 +289,8 @@
 		"942EEBBACD6C88CAE7F29B29" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "AuditorTests";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "local.aiusageauditor.tests";
+				"PRODUCT_NAME" = "AgentMeterTests";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.tests";
 				"GENERATE_INFOPLIST_FILE" = "YES";
 				"CODE_SIGN_IDENTITY" = "-";
 				"CODE_SIGN_STYLE" = "Automatic";
@@ -291,7 +315,7 @@
 		};
 		"F75109BEB4DD8800DA6B45F8" = {
 			"isa" = "PBXNativeTarget";
-			"name" = "AIUsageAuditorApp";
+			"name" = "AgentMeterApp";
 			"buildConfigurationList" = "4867F1BF372A84237FA0A5A7";
 			"buildPhases" = (
 				"E03B91648582AC619C34B919",
@@ -305,13 +329,13 @@
 				"8E50E7BBB677DEBA988D31D6",
 				"E87BBDE5F637736533DF4449",
 			);
-			"productName" = "AI Usage Auditor";
+			"productName" = "Agent Meter";
 			"productReference" = "4E783A9E10D2A8ABA38CD11C";
 			"productType" = "com.apple.product-type.application";
 		};
 		"C062A5A4A7F4F37DD90F54CB" = {
 			"isa" = "PBXNativeTarget";
-			"name" = "AuditorTests";
+			"name" = "AgentMeterTests";
 			"buildConfigurationList" = "19170B56EA5642A46C383F29";
 			"buildPhases" = (
 				"BEC0F8E8F4B822357549E360",
@@ -324,7 +348,7 @@
 			"packageProductDependencies" = (
 				"6AA656F63CB6EDCBCB920EA5",
 			);
-			"productName" = "AuditorTests";
+			"productName" = "AgentMeterTests";
 			"productReference" = "6C7CCDEB3609F1FAA874E941";
 			"productType" = "com.apple.product-type.bundle.unit-test";
 		};

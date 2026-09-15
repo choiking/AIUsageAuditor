@@ -5,6 +5,8 @@ import Darwin
 
 private actor LogWorker {
     private var scanner: LogScanner?
+    private let contentScanner = ContentAnalysisScanner()
+    func analyze() -> ContentAnalysisResult { contentScanner.scan() }
     private var lockDescriptor: Int32 = -1
     deinit { if lockDescriptor >= 0 { close(lockDescriptor) } }
     func scan(directory: URL) throws -> LogScanResult {
@@ -20,11 +22,16 @@ private actor LogWorker {
     }
 }
 
+enum AuditorTab: String, CaseIterable { case usage = "用量", analysis = "分析" }
+
 enum LogPeriod: String, CaseIterable { case today = "今日", all = "已导入历史" }
 
 @MainActor
 final class AuditorModel: ObservableObject {
     static let shared = AuditorModel()
+    @Published var tab: AuditorTab = .usage { didSet { if tab == .analysis { requestedScan = true } } }
+    @Published private(set) var analysis: ContentAnalysisResult?
+    @Published private(set) var analyzing = false
     @Published var period: LogPeriod = .today
     @Published var selectedSource: LogSource = .codexDesktop
     @Published var clock = Date()
@@ -88,7 +95,10 @@ final class AuditorModel: ObservableObject {
 
     init() {
         demo = ProcessInfo.processInfo.arguments.contains("--demo")
+        if ProcessInfo.processInfo.arguments.contains("--analysis") { tab = .analysis }
         directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            // Kept as "AIUsageAuditor" across the rename to Agent Meter so that
+            // ledgers written by earlier versions are not orphaned.
             .appendingPathComponent("AIUsageAuditor", isDirectory: true)
         if demo {
             var summary = LogSummary()
@@ -123,6 +133,11 @@ final class AuditorModel: ObservableObject {
         do { result = try await worker.scan(directory: directory); error = nil }
         catch { self.error = (error as? LocalizedError)?.errorDescription ?? "日志读取失败。" }
         scanning = false
+        if tab == .analysis {
+            analyzing = true
+            analysis = await worker.analyze()
+            analyzing = false
+        }
         writeDiagnostics()
     }
     private func writeDiagnostics() {
@@ -139,6 +154,11 @@ final class AuditorModel: ObservableObject {
                 return ["source": source.rawValue, "period": period.rawValue, "input": totals.input,
                         "output": totals.output, "total": totals.total, "records": totals.records]
             }
+        }
+        if let analysis {
+            report["analysis"] = ["prompts": analysis.records.filter { $0.kind == .prompt }.count,
+                                  "files": analysis.files, "readErrors": analysis.errors,
+                                  "skipped": analysis.skipped, "pendingFiles": analysis.pendingFiles]
         }
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])

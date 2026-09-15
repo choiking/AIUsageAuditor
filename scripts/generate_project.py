@@ -23,8 +23,8 @@ def serialize(value, depth=0):
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 package = add("package", "XCLocalSwiftPackageReference", relativePath=".")
-app_product = add("app-product", "PBXFileReference", explicitFileType="wrapper.application", path="AI Usage Auditor.app", sourceTree="BUILT_PRODUCTS_DIR")
-test_product = add("test-product", "PBXFileReference", explicitFileType="wrapper.cfbundle", path="AuditorTests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
+app_product = add("app-product", "PBXFileReference", explicitFileType="wrapper.application", path="Agent Meter.app", sourceTree="BUILT_PRODUCTS_DIR")
+test_product = add("test-product", "PBXFileReference", explicitFileType="wrapper.cfbundle", path="AgentMeterTests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
 groups = []
 
 def source_phase(name, directory):
@@ -59,29 +59,29 @@ def configurations(name, settings):
         configs.append(add(name + mode, "XCBuildConfiguration", buildSettings=current, name=mode))
     return add(name + "-configs", "XCConfigurationList", buildConfigurations=configs, defaultConfigurationIsVisible="0", defaultConfigurationName="Release")
 
-app_sources = source_phase("App", "Sources/AIUsageAuditor")
+app_sources = source_phase("App", "Sources/AgentMeter")
 test_sources = source_phase("Tests", "Tests/AuditorCoreTests")
 app_deps, app_frameworks = dependencies("App", ["AuditorCore", "AccessibilityKit"])
 test_deps, test_frameworks = dependencies("Tests", ["AuditorCore"])
 app_config = configurations("app", {
-    "PRODUCT_NAME": "AI Usage Auditor", "PRODUCT_BUNDLE_IDENTIFIER": "local.aiusageauditor.app",
+    "PRODUCT_NAME": "Agent Meter", "PRODUCT_BUNDLE_IDENTIFIER": "local.agentmeter.app",
     "INFOPLIST_FILE": "Config/Info.plist", "CODE_SIGN_STYLE": "Automatic", "CODE_SIGN_IDENTITY": "-",
     "ENABLE_APP_SANDBOX": "NO", "ENABLE_HARDENED_RUNTIME": "YES",
     "LD_RUNPATH_SEARCH_PATHS": ["$(inherited)", "@executable_path/../Frameworks"],
     "COMBINE_HIDPI_IMAGES": "YES",
 })
 test_config = configurations("test", {
-    "PRODUCT_NAME": "AuditorTests", "PRODUCT_BUNDLE_IDENTIFIER": "local.aiusageauditor.tests",
+    "PRODUCT_NAME": "AgentMeterTests", "PRODUCT_BUNDLE_IDENTIFIER": "local.agentmeter.tests",
     "GENERATE_INFOPLIST_FILE": "YES", "CODE_SIGN_IDENTITY": "-", "CODE_SIGN_STYLE": "Automatic",
     "LD_RUNPATH_SEARCH_PATHS": ["$(inherited)", "@loader_path/../Frameworks"],
 })
-app = add("app-target", "PBXNativeTarget", name="AIUsageAuditorApp", buildConfigurationList=app_config,
+app = add("app-target", "PBXNativeTarget", name="AgentMeterApp", buildConfigurationList=app_config,
           buildPhases=[app_sources, app_frameworks], buildRules=[], dependencies=[],
-          packageProductDependencies=app_deps, productName="AI Usage Auditor", productReference=app_product,
+          packageProductDependencies=app_deps, productName="Agent Meter", productReference=app_product,
           productType="com.apple.product-type.application")
-tests = add("test-target", "PBXNativeTarget", name="AuditorTests", buildConfigurationList=test_config,
+tests = add("test-target", "PBXNativeTarget", name="AgentMeterTests", buildConfigurationList=test_config,
             buildPhases=[test_sources, test_frameworks], buildRules=[], dependencies=[],
-            packageProductDependencies=test_deps, productName="AuditorTests", productReference=test_product,
+            packageProductDependencies=test_deps, productName="AgentMeterTests", productReference=test_product,
             productType="com.apple.product-type.bundle.unit-test")
 products = add("products", "PBXGroup", name="Products", children=[app_product, test_product], sourceTree="<group>")
 main = add("main", "PBXGroup", children=groups + [products], sourceTree="<group>")
@@ -93,15 +93,15 @@ project = add("project", "PBXProject", attributes={"LastUpgradeCheck": "1600", "
               buildConfigurationList=project_config, compatibilityVersion="Xcode 14.0", developmentRegion="en",
               hasScannedForEncodings="0", knownRegions=["en", "Base", "zh-Hans"], mainGroup=main,
               productRefGroup=products, projectDirPath="", projectRoot="", targets=[app, tests], packageReferences=[package])
-project_dir = ROOT / "AIUsageAuditor.xcodeproj"
+project_dir = ROOT / "AgentMeter.xcodeproj"
 project_dir.mkdir(exist_ok=True)
 (project_dir / "project.pbxproj").write_text("// !$*UTF8*$!\n" + serialize(dict(archiveVersion="1", classes={}, objectVersion="56", objects=objects, rootObject=project)) + "\n")
 
 def reference(target, name, product):
-    return f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{target}" BuildableName="{product}" BlueprintName="{name}" ReferencedContainer="container:AIUsageAuditor.xcodeproj"/>'
+    return f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{target}" BuildableName="{product}" BlueprintName="{name}" ReferencedContainer="container:AgentMeter.xcodeproj"/>'
 
-app_ref = reference(app, "AIUsageAuditorApp", "AI Usage Auditor.app")
-test_ref = reference(tests, "AuditorTests", "AuditorTests.xctest")
+app_ref = reference(app, "AgentMeterApp", "Agent Meter.app")
+test_ref = reference(tests, "AgentMeterTests", "AgentMeterTests.xctest")
 scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
 <Scheme LastUpgradeVersion="1600" version="1.7">
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries>
@@ -116,5 +116,5 @@ scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
 '''
 schemes = project_dir / "xcshareddata/xcschemes"
 schemes.mkdir(parents=True, exist_ok=True)
-(schemes / "AIUsageAuditor.xcscheme").write_text(scheme)
+(schemes / "AgentMeter.xcscheme").write_text(scheme)
 print(project_dir)

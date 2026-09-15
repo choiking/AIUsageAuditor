@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.arguments.contains("--demo") || ProcessInfo.processInfo.arguments.contains("--show") {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 780),
                                   styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            window.title = "AI Usage Auditor · Logs"
+            window.title = "Agent Meter · Logs"
             window.contentView = NSHostingView(rootView: AuditorPanel(model: AuditorModel.shared))
             window.isReleasedWhenClosed = false
             window.center(); window.makeKeyAndOrderFront(nil)
@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct AIUsageAuditorApp: App {
+struct AgentMeterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var model = AuditorModel.shared
     var body: some Scene {

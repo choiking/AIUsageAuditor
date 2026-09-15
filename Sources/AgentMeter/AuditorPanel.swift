@@ -12,16 +12,22 @@ struct AuditorPanel: View {
                     Image(systemName: "chart.bar.xaxis").font(.title2).foregroundStyle(.teal)
                         .padding(10).background(.teal.opacity(0.10), in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("AI Usage Auditor").font(.headline)
+                        Text("Agent Meter").font(.headline)
                         Text("LOG USAGE  ·  日志上报用量").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Circle().fill(model.error != nil ? .red : (model.paused ? .orange : .teal)).frame(width: 8, height: 8)
                 }
+                Picker("页面", selection: $model.tab) {
+                    ForEach(AuditorTab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }.pickerStyle(.segmented)
                 Picker("统计期间", selection: $model.period) {
-                    ForEach(LogPeriod.allCases, id: \.self) { period in Text(period.rawValue).tag(period) }
+                    ForEach(LogPeriod.allCases, id: \.self) { period in Text(model.tab == .analysis && period == .all ? "历史" : period.rawValue).tag(period) }
                 }.pickerStyle(.segmented)
 
+                if model.tab == .analysis {
+                    AnalysisPanel(model: model)
+                } else {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text(model.period == .today ? "今日 · 全部日志来源" : "已导入历史 · 全部来源").font(.subheadline.weight(.semibold))
@@ -87,6 +93,7 @@ struct AuditorPanel: View {
                         }
                     }
                 }
+                }
                 Divider()
                 VStack(alignment: .leading, spacing: 6) {
                     Label(model.status, systemImage: model.paused ? "pause.circle" : "doc.text.magnifyingglass")
@@ -102,7 +109,7 @@ struct AuditorPanel: View {
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 HStack {
                     Button(model.paused ? "恢复采集" : "暂停采集") { model.togglePaused() }.disabled(model.demo)
-                    Button("刷新") { model.refreshNow() }.disabled(model.demo || model.scanning || model.paused)
+                    Button("刷新") { model.refreshNow() }.disabled(model.demo || model.scanning || model.analyzing || model.paused)
                     Menu {
                         Button("打开来源日志目录") { model.openLogFolder() }
                         Button("打开本地账本目录") { model.openDataFolder() }

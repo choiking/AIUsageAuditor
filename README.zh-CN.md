@@ -1,4 +1,4 @@
-# AI Usage Auditor（AI 用量审计器）
+# Agent Meter（编程 Agent 用量计）
 
 [English](README.md) · [中文](README.zh-CN.md)
 
@@ -11,18 +11,18 @@
 
 ## 界面截图
 
-![AI Usage Auditor 面板](Docs/images/dashboard.png)
+![Agent Meter 面板](Docs/images/dashboard.png)
 
 今日全部日志来源的合计，并按日志入口分类展开。
 
 ## 安装
 
-从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **AI Usage Auditor.app** 拖进「应用程序」。
+从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **Agent Meter.app** 拖进「应用程序」。
 
 该构建使用 ad-hoc 签名且未经过公证（notarize），因此首次打开时会被 macOS 拦截，提示信息常常会误导性地说应用「已损坏」。这其实只是隔离（quarantine）标记。**右键点击应用 → 打开 → 打开**，或执行：
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/AI Usage Auditor.app"
+xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
 ```
 
 需要 **Apple Silicon** 芯片和 **macOS 13 及以上**。Intel 芯片和 macOS 13 上的实际表现未经验证。从源码自行构建则完全不会遇到上述 Gatekeeper 拦截。
@@ -32,7 +32,7 @@ xattr -dr com.apple.quarantine "/Applications/AI Usage Auditor.app"
 点击菜单栏上的 token 总数即可打开面板。也可以直接显示：
 
 ```sh
-open "build/AI Usage Auditor.app" --args --show
+open "build/Agent Meter.app" --args --show
 ```
 
 面板分为 **Today（今天）** 和 **Imported history（导入的历史）** 两个区间，展示输入/输出总量、缓存明细、Codex 推理（reasoning）明细、各来源的记录数、最近一次用量时间，以及明确的数据质量警告。无论面板切换到哪个区间，菜单栏始终显示今天已接受的输入/输出。
@@ -40,6 +40,16 @@ open "build/AI Usage Auditor.app" --args --show
 首次扫描会导入保留下来的历史记录。之后每五秒检查一次，且只读取新追加的字节。暂停会停止本次运行的扫描，恢复后会补齐期间的数据。切换来源只改变展示的明细，不改变监控范围。
 
 **某个区间显示为零，意味着没有找到该区间的有效本地记录，而不是说账号没有产生任何消耗。** 可以通过来源的「最近用量时间」来区分陈旧历史和新近用量。
+
+## 内容分析
+
+“分析”标签页按用户提示词分为编程开发、排错测试、研究问答、写作翻译、设计创作、规划管理和其他。可切换“今日 / 历史”（历史包含今日）、筛选来源、点击分类、搜索并展开提示词，同时查看当前期间与来源的会话数、AI 回复记录数和工具活动。
+
+分类使用本地中英文关键词规则，可能误分；占比按提示词条数计算，不代表 token 占比。已过滤已知系统上下文、工具结果、Claude 子代理任务与 Codex 内部审批／子代理会话，未识别的注入内容仍可能混入。Claude 流式快照与日志副本会去重；Codex 同文且相差不超过 5 秒的 event/response 副本会合并。AI 回复记录数不等于模型请求次数。工具错误只统计 Claude 明确标记的失败，暂不解析 Codex 错误。
+
+内容仅在打开分析页后读取到内存，并随采集刷新，不上传，也不写入用量账本。每条提示词最多用前 12,000 字符进行分类和展示。历史只覆盖仍存在的来源日志，删除日志后对应内容会在下次扫描移除；已保存的数值用量历史不受影响。大日志分批导入，未完成时会提示。
+
+只查看汇总、不打印提示词：`./build/LogInspector --analysis`。
 
 ## 数据来源
 
@@ -79,7 +89,7 @@ open "build/AI Usage Auditor.app" --args --show
 
 ## 隐私
 
-账本文件位于 `~/Library/Application Support/AIUsageAuditor/log-usage.json`，以原子方式写入，文件权限 `0600`，目录权限 `0700`。其中仅保存数值快照、时间戳、已识别的来源元数据、哈希后的标识和读取检查点。
+账本文件位于 `~/Library/Application Support/AIUsageAuditor/log-usage.json`（该目录沿用改名为 Agent Meter 之前的旧名，以免早期版本写入的历史记录失联），以原子方式写入，文件权限 `0600`，目录权限 `0700`。其中仅保存数值快照、时间戳、已识别的来源元数据、哈希后的标识和读取检查点。
 
 **它绝不保存 prompt、模型回复、工具输出、项目路径、原始 session/request ID 或任何凭据。** 源 JSONL 文件本身确实包含对话内容，但解析全程在本地内存中完成。`diagnostics.json` 只记录聚合的扫描状态和各来源计数。
 
@@ -92,7 +102,7 @@ open "build/AI Usage Auditor.app" --args --show
 ./scripts/build-app.sh --disable-sandbox
 ```
 
-`--disable-sandbox` 针对的是 SwiftPM 的构建过程，与应用权限无关。`AUDITOR_BUILD_ROOT` 可覆盖构建缓存位置；Xcode 的共享 scheme 名为 `AIUsageAuditor`。
+`--disable-sandbox` 针对的是 SwiftPM 的构建过程，与应用权限无关。`AUDITOR_BUILD_ROOT` 可覆盖构建缓存位置；Xcode 的共享 scheme 名为 `AgentMeter`。
 
 ```sh
 ./build/LogInspector                                  # 与 GUI 相同的扫描器，默认不持久化

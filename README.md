@@ -1,4 +1,4 @@
-# AI Usage Auditor
+# Agent Meter
 
 [English](README.md) · [中文](README.zh-CN.md)
 
@@ -11,18 +11,18 @@ No API key, proxy, certificate, or Accessibility permission required. Nothing le
 
 ## Screenshot
 
-![AI Usage Auditor dashboard](Docs/images/dashboard.png)
+![Agent Meter dashboard](Docs/images/dashboard.png)
 
 Today's totals across all log sources, broken down by entry point. The interface is currently in Chinese only.
 
 ## Install
 
-Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **AI Usage Auditor.app** to Applications.
+Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **Agent Meter.app** to Applications.
 
 The build is ad-hoc signed and not notarized, so macOS blocks it on first launch — often with a misleading "damaged" message. That's the quarantine flag. **Right-click the app → Open → Open**, or:
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/AI Usage Auditor.app"
+xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
 ```
 
 Requires **Apple Silicon** and **macOS 13+**. Intel and macOS 13 behavior are unverified. Building from source avoids the Gatekeeper step entirely.
@@ -32,7 +32,7 @@ Requires **Apple Silicon** and **macOS 13+**. Intel and macOS 13 behavior are un
 Click the token totals in the menu bar to open the dashboard. To show it immediately:
 
 ```sh
-open "build/AI Usage Auditor.app" --args --show
+open "build/Agent Meter.app" --args --show
 ```
 
 The dashboard has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
@@ -40,6 +40,16 @@ The dashboard has **Today** and **Imported history**, with input/output totals, 
 The first scan imports retained history. After that it checks every five seconds and reads only appended bytes. Pause stops scanning for this run; resuming backfills. Selecting a source changes the details, not what is monitored.
 
 **Zero records for a period means no eligible local records were found — not that the account consumed nothing.** Check the source's last usage timestamp to tell old history from fresh usage.
+
+## Content analysis
+
+The **分析 (Analysis)** tab groups user prompts into development, debugging/testing, research/questions, writing/translation, design, planning, and other. Switch between **Today** and **History** (including today), filter by source, or select a category to search and expand matching prompts. It also shows session counts, assistant message counts, and tool activity for the selected period and source.
+
+Classification uses local Chinese/English keyword rules, not a model, and can be wrong. Percentages represent prompt counts, not tokens. Known system wrappers, tool results, Claude subagent prompts, and Codex internal review/subagent sessions are excluded; unrecognized injected content may remain. Claude streaming message snapshots and copied logs are deduplicated. Codex event/response copies with matching text within five seconds are reconciled. Assistant counts describe recorded messages, not model requests. Only explicit Claude tool errors are counted; Codex error formats are not interpreted.
+
+Content is indexed in memory when this tab opens, then updated with collection. It is never uploaded or added to the usage ledger. Prompt previews and classification use at most 12,000 characters per prompt. History covers currently available source files; deleting a log removes its content from analysis on the next scan. Numeric usage history remains retained separately. Large files import in batches, with an incomplete-data notice.
+
+To inspect aggregates without printing prompts: `./build/LogInspector --analysis`.
 
 ## Where the data comes from
 
@@ -79,7 +89,7 @@ A "record" is a deduplicated usage increment — not necessarily one message, re
 
 ## Privacy
 
-The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
+The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` (the folder keeps its original name so history written before the rename to Agent Meter is not orphaned) is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
 
 **It never stores prompts, responses, tool outputs, project paths, raw session/request IDs, or credentials.** The source JSONL files do contain transcripts; parsing happens locally, in memory. `diagnostics.json` records only aggregate scan status and per-source counters.
 
@@ -92,7 +102,7 @@ Read checkpoints advance only for complete lines. Partial appends are retried, f
 ./scripts/build-app.sh --disable-sandbox
 ```
 
-`--disable-sandbox` concerns SwiftPM's build process, not app permissions. `AUDITOR_BUILD_ROOT` overrides the build cache location; Xcode's shared scheme is `AIUsageAuditor`.
+`--disable-sandbox` concerns SwiftPM's build process, not app permissions. `AUDITOR_BUILD_ROOT` overrides the build cache location; Xcode's shared scheme is `AgentMeter`.
 
 ```sh
 ./build/LogInspector                                  # same scanner as the GUI, no persistence

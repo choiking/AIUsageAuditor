@@ -84,6 +84,8 @@ struct AuditorPanel: View {
                         detail("推理 · 输出的一部分", value: model.selectedTotals.reasoning,
                                unknown: model.selectedTotals.missingReasoning)
                     }
+                    costRow
+
                     if let date = model.lastUsage {
                         Text("最近用量记录：\(date.formatted(date: .numeric, time: .shortened))")
                             .font(.caption).foregroundStyle(.secondary)
@@ -133,6 +135,46 @@ struct AuditorPanel: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
+    /// List-price estimate. Deliberately never called spend: the logs record no
+    /// billing mode, so a subscription user pays a flat fee regardless of this.
+    @ViewBuilder private var costRow: some View {
+        let cost = model.selectedCost
+        Divider().padding(.vertical, 1)
+        if cost.hasAnything {
+            HStack(alignment: .firstTextBaseline) {
+                Text("API 目录价估算").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(cost.amount, format: .currency(code: "USD"))
+                    .font(.caption.weight(.semibold)).monospacedDigit()
+            }
+            Text("按公开 API 单价折算，非账单、非订阅扣费。订阅用户按月付费，与此数字无关。")
+                .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if !cost.isComplete {
+                Text(unpricedNote(cost)).font(.caption2).foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            Text("当前来源无可定价记录").font(.caption).foregroundStyle(.secondary)
+            if !cost.unpricedModels.isEmpty {
+                Text(unpricedNote(cost)).font(.caption2).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func unpricedNote(_ cost: CostEstimate) -> String {
+        var parts: [String] = []
+        if cost.unpricedRecords > 0 {
+            let models = cost.unpricedModels.sorted().prefix(3).joined(separator: "、")
+            parts.append("\(cost.unpricedRecords) 条记录的模型无内置单价（\(models)\(cost.unpricedModels.count > 3 ? " 等" : "")），未计入。")
+        }
+        if cost.unknownModelRecords > 0 {
+            parts.append("\(cost.unknownModelRecords) 条记录未标明模型，未计入。")
+        }
+        if !parts.isEmpty { parts.append("可在 pricing.json 中自行补充单价。") }
+        return parts.joined(separator: "")
+    }
+
     private func detail(_ title: String, value: Int64, unknown: Bool) -> some View {
         HStack {
             Text(title); Spacer()

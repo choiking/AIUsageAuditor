@@ -35,6 +35,16 @@ do {
         "duplicates": result.summary.duplicates, "readErrors": result.errors, "invalidLines": result.invalidLines,
         "incompleteUsage": result.incompleteUsage, "pendingFiles": result.pendingFiles,
         "changed": result.changed,
+        "cost": {
+            let table = PricingTable.bundled
+            let estimate = table.estimate(records)
+            return ["listPriceUSD": (estimate.amount * 100).rounded() / 100,
+                    "pricedRecords": estimate.pricedRecords,
+                    "unpricedRecords": estimate.unpricedRecords,
+                    "unknownModelRecords": estimate.unknownModelRecords,
+                    "unpricedModels": estimate.unpricedModels.sorted(),
+                    "ratesEffective": table.effective] as [String: Any]
+        }(),
         "sources": LogSource.allCases.compactMap { source -> [String: Any]? in
             let events = records.filter { $0.source == source }
             guard !events.isEmpty else { return nil }

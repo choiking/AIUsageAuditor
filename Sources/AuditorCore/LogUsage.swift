@@ -46,10 +46,15 @@ public struct LogTokens: Codable, Equatable {
     public var cacheWrite: Int64? = nil
     public var reasoning: Int64? = nil
     public var total: Int64 = 0
+    /// Subset of `cacheWrite` written with a 1-hour TTL, which bills at 2x base
+    /// input instead of 1.25x. nil when the log did not report the split.
+    public var cacheWrite1h: Int64? = nil
     public init(input: Int64 = 0, output: Int64 = 0, cacheRead: Int64? = nil,
-                cacheWrite: Int64? = nil, reasoning: Int64? = nil, total: Int64 = 0) {
+                cacheWrite: Int64? = nil, reasoning: Int64? = nil, total: Int64 = 0,
+                cacheWrite1h: Int64? = nil) {
         self.input = input; self.output = output; self.cacheRead = cacheRead
         self.cacheWrite = cacheWrite; self.reasoning = reasoning; self.total = total
+        self.cacheWrite1h = cacheWrite1h
     }
     static func number(_ value: Any?) -> Int64? {
         guard let value = value as? NSNumber, CFGetTypeID(value) != CFBooleanGetTypeID() else { return nil }
@@ -68,8 +73,15 @@ public struct LogTokens: Codable, Equatable {
         let read = number(u[readKey]), write = number(u[writeKey])
         if tool == .claudeCode {
             guard let read, let write else { return nil }
+            // Only trust the split when it is present and consistent with the total.
+            var write1h: Int64? = nil
+            if let creation = u["cache_creation"] as? [String: Any],
+               let long = number(creation["ephemeral_1h_input_tokens"]), long <= write {
+                write1h = long
+            }
             return LogTokens(input: input + read + write, output: output, cacheRead: read,
-                             cacheWrite: write, total: input + read + write + output)
+                             cacheWrite: write, total: input + read + write + output,
+                             cacheWrite1h: write1h)
         }
         guard let total = number(u["total_tokens"]) else { return nil }
         return LogTokens(input: input, output: output, cacheRead: read, cacheWrite: write,
@@ -103,10 +115,14 @@ public struct LogRecord: Codable, Equatable {
     public var provenance: String
     public var tokens: LogTokens
     public var last: LogTokens?
+    /// Model string as recorded in the log; nil when it was absent.
+    public var model: String?
     public init(key: String, session: String, time: Date, source: LogSource,
-                provenance: String, tokens: LogTokens, last: LogTokens? = nil) {
+                provenance: String, tokens: LogTokens, last: LogTokens? = nil,
+                model: String? = nil) {
         self.key = key; self.session = session; self.time = time; self.source = source
         self.provenance = provenance; self.tokens = tokens; self.last = last
+        self.model = model
     }
 }
 
@@ -120,6 +136,8 @@ public struct LogFileState: Codable, Equatable {
     public var session: String?
     public var source: LogSource
     public var provenance = "未提供或未识别"
+    /// Codex records the model per turn, not per usage event.
+    public var model: String?
     public var records: [LogRecord] = []
     public var invalidLines = 0
     public var incompleteUsage = 0
@@ -150,9 +168,10 @@ public enum LogParser {
                 state.incompleteUsage += 1; return
             }
             let (source, provenance) = LogSource.classify(r["entrypoint"] as? String, tool: .claudeCode)
+            let model = (m["model"] as? String).flatMap { $0.isEmpty || $0 == "<synthetic>" ? nil : $0 }
             state.records.append(LogRecord(key: digest("claude\u{0}" + request + "\u{0}" + message),
                 session: digest("claude\u{0}" + (r["sessionId"] as? String ?? "unknown")), time: time,
-                source: source, provenance: provenance, tokens: tokens))
+                source: source, provenance: provenance, tokens: tokens, model: model))
         } else {
             guard let payload = r["payload"] as? [String: Any] else { return }
             if r["type"] as? String == "session_meta" {
@@ -160,6 +179,9 @@ public enum LogParser {
                     state.session = digest("codex\u{0}" + id)
                 }
                 (state.source, state.provenance) = LogSource.classify(payload["originator"] as? String, tool: .codex)
+            }
+            if r["type"] as? String == "turn_context", let model = payload["model"] as? String, !model.isEmpty {
+                state.model = model
             }
             guard r["type"] as? String == "event_msg", payload["type"] as? String == "token_count",
                   let info = payload["info"] as? [String: Any] else { return }
@@ -170,7 +192,7 @@ public enum LogParser {
             let last = LogTokens.parse(info["last_token_usage"], tool: .codex)
             let key = digest("codex\u{0}\(time.timeIntervalSince1970)\u{0}\(tokens.fingerprint)\u{0}\(last?.fingerprint ?? "?")")
             state.records.append(LogRecord(key: key, session: session, time: time, source: state.source,
-                provenance: state.provenance, tokens: tokens, last: last))
+                provenance: state.provenance, tokens: tokens, last: last, model: state.model))
         }
     }
 }
@@ -183,9 +205,12 @@ public struct LogEvent: Codable, Identifiable, Equatable {
     /// nil for inherited/pruned cumulative history without a known invocation date.
     public var occurredAt: Date?
     public var tokens: LogTokens
-    public init(id: String, source: LogSource, provenance: String, observedAt: Date, occurredAt: Date?, tokens: LogTokens) {
+    /// Model string as recorded in the log; nil when it was absent.
+    public var model: String?
+    public init(id: String, source: LogSource, provenance: String, observedAt: Date,
+                occurredAt: Date?, tokens: LogTokens, model: String? = nil) {
         self.id = id; self.source = source; self.provenance = provenance; self.observedAt = observedAt
-        self.occurredAt = occurredAt; self.tokens = tokens
+        self.occurredAt = occurredAt; self.tokens = tokens; self.model = model
     }
 }
 
@@ -213,7 +238,7 @@ public struct LogSummary {
         result.ambiguousMessages = ambiguous.count
         for r in claude.values where !ambiguous.contains(r.key) {
             result.events.append(LogEvent(id: r.key, source: r.source, provenance: r.provenance,
-                observedAt: r.time, occurredAt: r.time, tokens: r.tokens))
+                observedAt: r.time, occurredAt: r.time, tokens: r.tokens, model: r.model))
         }
         let groups = Dictionary(grouping: records.filter { $0.source.tool == .codex }, by: \.session)
         var candidates: [LogEvent] = []
@@ -232,7 +257,7 @@ public struct LogSummary {
                 previous = r.tokens; isFirst = false
                 guard delta.input != 0 || delta.output != 0 || delta.total != 0 else { result.duplicates += 1; continue }
                 pending.append(LogEvent(id: r.key, source: r.source, provenance: r.provenance,
-                    observedAt: r.time, occurredAt: knownDate ? r.time : nil, tokens: delta))
+                    observedAt: r.time, occurredAt: knownDate ? r.time : nil, tokens: delta, model: r.model))
             }
             if !result.excludedSessions.contains(session) { candidates.append(contentsOf: pending) }
         }

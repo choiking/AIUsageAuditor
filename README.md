@@ -7,7 +7,7 @@ A local macOS menu-bar app that reads **Claude Code** and **Codex** log files an
 No API key, proxy, certificate, or Accessibility permission required. Nothing leaves your machine.
 
 > **These are log-reported tokens — not your subscription quota, and not a bill.**
-> They cover Claude programming-agent and Codex sessions only. Ordinary Claude and ChatGPT chats are not included. No cost is calculated.
+> They cover Claude programming-agent and Codex sessions only. Ordinary Claude and ChatGPT chats are not included. The cost figure is a list-price estimate, not a bill — see [Cost estimate](#cost-estimate).
 
 ## Screenshot
 
@@ -87,6 +87,27 @@ Two notes on this. Codex's generic `source: vscode` does not override an explici
 
 A "record" is a deduplicated usage increment — not necessarily one message, request, or invoice line. Missing optional counters are labeled partially unreported; malformed records appear as exclusions rather than fabricated zeros.
 
+## Cost estimate
+
+Each source shows what its tokens would cost **at published API list rates**. This is an estimate of list price, not a record of spend:
+
+- **The logs record no billing mode.** On a Claude or ChatGPT subscription you pay a flat monthly fee, and this number has nothing to do with what you were charged. It answers "what would these tokens cost at API rates", nothing more.
+- **Rates are bundled as of 2026-06-24** and go stale when pricing changes.
+- Cache tokens are priced at their own rates — reads at 0.1× base input, writes at 1.25× for a 5-minute TTL and 2× for a 1-hour TTL. Claude logs report the two write TTLs separately, so they are priced separately rather than assumed. When a record omits the split, the cheaper 5-minute rate is used.
+- **Codex models ship unpriced.** This project has no authoritative rate source for them, so rather than invent numbers the app counts those records as unpriced and says so. Since Codex is likely most of your usage, expect the estimate to cover a minority of your tokens.
+- Records whose model is unknown or unpriced contribute nothing and are reported separately, the same fail-closed rule used for unrecognized sources.
+
+To add or override rates, create `~/Library/Application Support/AIUsageAuditor/pricing.json`. Values are USD per million tokens; entries merge over the bundled table, and a malformed file is ignored rather than zeroing it.
+
+```json
+{
+  "effective": "2026-09-15",
+  "rates": {
+    "gpt-6-astra": { "input": 4, "output": 16, "cacheRead": 0.4, "cacheWrite5m": 5, "cacheWrite1h": 8 }
+  }
+}
+```
+
 ## Privacy
 
 The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` (the folder keeps its original name so history written before the rename to Agent Meter is not orphaned) is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
@@ -121,6 +142,7 @@ python3 scripts/generate_project.py                   # regenerate the Xcode pro
 - Copied history rewritten with new identities or timestamps may not deduplicate. In-place rewrites replace that file's cached records.
 - Optional counter fields absent from older records are not assumed to be universally reported.
 - Files are ingested up to 32 MiB per file per scan; individual records over 8 MiB are skipped.
+- Cost figures are list-price arithmetic on reported tokens. They do not account for subscriptions, discounts, batch or priority pricing, free tiers, or partner rates.
 - Source time ranges don't prove complete retention or account-wide coverage.
 - The v0.3 app no longer polls Accessibility or merges visible-text estimates into totals. Legacy core and inspector utilities remain for reference; the `scripts/proxy*` tools are experimental and the app never runs them.
 

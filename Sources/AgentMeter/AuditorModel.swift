@@ -60,6 +60,10 @@ final class AuditorModel: ObservableObject {
     var today: LogTotals { LogTotals(events: filtered(today: true)) }
     func totals(for source: LogSource) -> LogTotals { LogTotals(events: filtered(source)) }
     var selectedTotals: LogTotals { totals(for: selectedSource) }
+    /// User rates override the bundled table; see Pricing.swift.
+    private(set) lazy var pricing = PricingTable.load(from: directory.appendingPathComponent("pricing.json"))
+    var cost: CostEstimate { pricing.estimate(filtered()) }
+    var selectedCost: CostEstimate { pricing.estimate(filtered(selectedSource)) }
     var lastUsage: Date? { events.filter { $0.source == selectedSource }.map(\.observedAt).max() }
     var provenance: String {
         let values = Set(events.filter { $0.source == selectedSource }.map(\.provenance)).sorted()

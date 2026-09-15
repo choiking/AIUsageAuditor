@@ -54,7 +54,7 @@ open "build/AI Usage Auditor.app" --args --show
 
 | 日志元数据 | 显示为 |
 | --- | --- |
-| Claude `entrypoint = claude-desktop` | Claude 桌面端 agent |
+| Claude `entrypoint = claude-desktop` | Claude Code · 桌面端 |
 | Claude `cli` | Claude Code CLI |
 | Claude `claude-vscode` / `vscode` | Claude Code IDE |
 | Claude `sdk-cli` / `sdk` | Claude Code SDK |
@@ -65,7 +65,7 @@ open "build/AI Usage Auditor.app" --args --show
 | Codex `codex-chrome-extension-sidepanel` | Codex 浏览器扩展 |
 | 缺失或无法识别 | 未知来源 |
 
-这里有两点需要说明。其一，Codex 中笼统的 `source: vscode` 不会覆盖明确的 `originator: Codex Desktop`。其二，`claude-desktop` 入口点只能证明这是一条来自桌面端的 **agent** 日志，并不意味着所有桌面端对话都会被记录——常规的 Chat 标签页是被排除在外的。分类依据的是记录下来的入口点，而非客户端用的是 API key 还是订阅登录。应用不会读取任何凭据来推断计费方式。
+这里有两点需要说明。其一，Codex 中笼统的 `source: vscode` 不会覆盖明确的 `originator: Codex Desktop`。其二，`claude-desktop` 指的是**在 Claude 桌面 App 内运行的 Claude Code**，而不是桌面 App 的 Chat 标签页——每一条这样的记录都带有工作目录（`cwd`）和 git 分支，而普通聊天对话并没有这些字段。上面四行 Claude 来源其实是同一个产品在不同入口的运行形态；普通的 Claude 聊天用量根本不会出现在这里。分类依据的是记录下来的入口点，而非客户端用的是 API key 还是订阅登录。应用不会读取任何凭据来推断计费方式。
 
 ## 计数方式
 

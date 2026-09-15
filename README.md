@@ -54,7 +54,7 @@ Sources are classified by the entry point recorded in the log, never guessed fro
 
 | Log metadata | Shown as |
 | --- | --- |
-| Claude `entrypoint = claude-desktop` | Claude desktop agent |
+| Claude `entrypoint = claude-desktop` | Claude Code · Desktop |
 | Claude `cli` | Claude Code CLI |
 | Claude `claude-vscode` / `vscode` | Claude Code IDE |
 | Claude `sdk-cli` / `sdk` | Claude Code SDK |
@@ -65,7 +65,7 @@ Sources are classified by the entry point recorded in the log, never guessed fro
 | Codex `codex-chrome-extension-sidepanel` | Codex browser extension |
 | Missing or unrecognized | Unknown source |
 
-Two notes on this. Codex's generic `source: vscode` does not override an explicit `originator: Codex Desktop`. And a `claude-desktop` entrypoint proves a desktop-origin *agent* log — it does not mean every desktop conversation is logged; the regular Chat tab is excluded. Classification reflects recorded entry points, not whether the client used an API key or a subscription login. No credentials are read.
+Two notes on this. Codex's generic `source: vscode` does not override an explicit `originator: Codex Desktop`. And `claude-desktop` means **Claude Code running inside the Claude desktop app**, not the desktop app's Chat tab — every such record carries a working directory (`cwd`) and git branch, which a chat conversation does not have. All four Claude rows are the same product on different surfaces; ordinary Claude chat is not logged here at all. Classification reflects recorded entry points, not whether the client used an API key or a subscription login. No credentials are read.
 
 ## How counting works
 

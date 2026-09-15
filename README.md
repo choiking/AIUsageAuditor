@@ -124,9 +124,11 @@ Codex reports no cache-write TTL split. A counter absent from a record is shown 
 Each source shows what its tokens would cost **at published API list rates**. This is an estimate of list price, not a record of spend:
 
 - **The logs record no billing mode.** On a Claude or ChatGPT subscription you pay a flat monthly fee, and this number has nothing to do with what you were charged. It answers "what would these tokens cost at API rates", nothing more.
-- **Rates are bundled as of 2026-06-24** and go stale when pricing changes.
-- Cache tokens are priced at their own rates — reads at 0.1× base input, writes at 1.25× for a 5-minute TTL and 2× for a 1-hour TTL. Claude logs report the two write TTLs separately, so they are priced separately rather than assumed. When a record omits the split, the cheaper 5-minute rate is used.
-- **Codex models ship unpriced.** This project has no authoritative rate source for them, so rather than invent numbers the app counts those records as unpriced and says so. Since Codex is likely most of your usage, expect the estimate to cover a minority of your tokens.
+- **Rates are transcribed as of 2026-09-16** from [Anthropic's pricing page](https://platform.claude.com/docs/en/about-claude/pricing) and [OpenAI's](https://developers.openai.com/api/docs/pricing), and go stale when either changes.
+- Every figure is copied from those tables rather than derived from a multiplier, because the multipliers have exceptions — Claude Fable 5.1 and Mythos 5.1 read cache at 0.025× base input, not the usual 0.1×.
+- Claude cache tokens are priced at their own rates: reads at 0.1× base input, writes at 1.25× for a 5-minute TTL and 2× for a 1-hour TTL. Claude logs report the two write TTLs separately, so they are priced separately rather than assumed; when a record omits the split, the cheaper 5-minute rate is used.
+- OpenAI publishes no cache-write premium — cached input is discounted and everything else bills at base input — so both write rates equal the input rate for those models.
+- **A few model ids have no published rate** and stay unpriced: `gpt-5-codex`, `gpt-5.2-codex`, and `codex-auto-review` appear on neither pricing page. Lookup is by exact id, or by the id minus a trailing `-YYYYMMDD` snapshot date. It deliberately does **not** fall back to a shared prefix: `gpt-5-codex` is not `gpt-5`, and the codex variants are priced differently from the base models they resemble.
 - Records whose model is unknown or unpriced contribute nothing and are reported separately, the same fail-closed rule used for unrecognized sources.
 
 To add or override rates, create `~/Library/Application Support/AIUsageAuditor/pricing.json`. Values are USD per million tokens; entries merge over the bundled table, and a malformed file is ignored rather than zeroing it.

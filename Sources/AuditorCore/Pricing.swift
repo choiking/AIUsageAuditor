@@ -21,6 +21,16 @@ public struct ModelRate: Codable, Equatable {
         self.cacheWrite5m = cacheWrite5m ?? input * 1.25
         self.cacheWrite1h = cacheWrite1h ?? input * 2.0
     }
+
+    /// OpenAI publishes only input / cached-input / output. Tokens written to
+    /// cache carry no premium there, so both write rates are the input rate.
+    public init(openAI input: Double, output: Double, cached: Double) {
+        self.input = input
+        self.output = output
+        self.cacheRead = cached
+        self.cacheWrite5m = input
+        self.cacheWrite1h = input
+    }
 }
 
 /// What a set of usage records would have cost at published API list rates.
@@ -57,29 +67,73 @@ public struct PricingTable: Codable, Equatable {
         self.effective = effective
     }
 
-    /// Anthropic list pricing. Codex/OpenAI models are deliberately absent: this
-    /// project has no authoritative rate source for them, and inventing numbers
-    /// would be worse than reporting them as unpriced. Add them via
-    /// `~/Library/Application Support/AIUsageAuditor/pricing.json`.
+    /// Published list rates, USD per million tokens.
+    ///
+    /// Anthropic: platform.claude.com/docs/en/about-claude/pricing
+    /// OpenAI:    developers.openai.com/api/docs/pricing
+    ///
+    /// Every figure is transcribed from those tables rather than derived from a
+    /// multiplier, because the multipliers have exceptions — Fable 5.1 and
+    /// Mythos 5.1 read cache at 0.025x base, not the usual 0.1x.
+    ///
+    /// OpenAI publishes no cache-write premium: cached input is discounted and
+    /// everything else bills at the base input rate, so both write rates equal
+    /// `input` for those models.
     public static let bundled = PricingTable(rates: [
-        "claude-fable-5":  ModelRate(input: 10, output: 50),
-        "claude-mythos-5": ModelRate(input: 10, output: 50),
-        "claude-opus-5":   ModelRate(input: 5,  output: 25),
-        "claude-opus-4-8": ModelRate(input: 5,  output: 25),
-        "claude-opus-4-7": ModelRate(input: 5,  output: 25),
-        "claude-opus-4-6": ModelRate(input: 5,  output: 25),
-        "claude-sonnet-5": ModelRate(input: 2,  output: 10),
-        "claude-sonnet-4-6": ModelRate(input: 3, output: 15),
-        "claude-haiku-4-5": ModelRate(input: 1, output: 5)
-    ], effective: "2026-06-24")
+        // — Anthropic —
+        "claude-fable-5-1":  ModelRate(input: 10, output: 50, cacheRead: 0.25, cacheWrite5m: 12.50, cacheWrite1h: 20),
+        "claude-mythos-5-1": ModelRate(input: 10, output: 50, cacheRead: 0.25, cacheWrite5m: 12.50, cacheWrite1h: 20),
+        "claude-fable-5":    ModelRate(input: 10, output: 50, cacheRead: 1,    cacheWrite5m: 12.50, cacheWrite1h: 20),
+        "claude-mythos-5":   ModelRate(input: 10, output: 50, cacheRead: 1,    cacheWrite5m: 12.50, cacheWrite1h: 20),
+        "claude-opus-5":     ModelRate(input: 5,  output: 25, cacheRead: 0.50, cacheWrite5m: 6.25,  cacheWrite1h: 10),
+        "claude-opus-4-8":   ModelRate(input: 5,  output: 25, cacheRead: 0.50, cacheWrite5m: 6.25,  cacheWrite1h: 10),
+        "claude-opus-4-7":   ModelRate(input: 5,  output: 25, cacheRead: 0.50, cacheWrite5m: 6.25,  cacheWrite1h: 10),
+        "claude-opus-4-6":   ModelRate(input: 5,  output: 25, cacheRead: 0.50, cacheWrite5m: 6.25,  cacheWrite1h: 10),
+        "claude-opus-4-5":   ModelRate(input: 5,  output: 25, cacheRead: 0.50, cacheWrite5m: 6.25,  cacheWrite1h: 10),
+        "claude-opus-4-1":   ModelRate(input: 15, output: 75, cacheRead: 1.50, cacheWrite5m: 18.75, cacheWrite1h: 30),
+        "claude-opus-4":     ModelRate(input: 15, output: 75, cacheRead: 1.50, cacheWrite5m: 18.75, cacheWrite1h: 30),
+        "claude-sonnet-5":   ModelRate(input: 2,  output: 10, cacheRead: 0.20, cacheWrite5m: 2.50,  cacheWrite1h: 4),
+        "claude-sonnet-4-6": ModelRate(input: 3,  output: 15, cacheRead: 0.30, cacheWrite5m: 3.75,  cacheWrite1h: 6),
+        "claude-sonnet-4-5": ModelRate(input: 3,  output: 15, cacheRead: 0.30, cacheWrite5m: 3.75,  cacheWrite1h: 6),
+        "claude-sonnet-4":   ModelRate(input: 3,  output: 15, cacheRead: 0.30, cacheWrite5m: 3.75,  cacheWrite1h: 6),
+        "claude-haiku-4-5":  ModelRate(input: 1,  output: 5,  cacheRead: 0.10, cacheWrite5m: 1.25,  cacheWrite1h: 2),
+        "claude-haiku-3-5":  ModelRate(input: 0.80, output: 4, cacheRead: 0.08, cacheWrite5m: 1,    cacheWrite1h: 1.60),
 
-    /// Dated model ids (`claude-haiku-4-5-20251001`) price as their base model.
-    /// Returns nil rather than guessing when no prefix matches.
+        // — OpenAI —
+        "gpt-6-astra":    ModelRate(openAI: 10,   output: 50,   cached: 1),
+        "gpt-5.6-sol":    ModelRate(openAI: 4,    output: 20,   cached: 0.40),
+        "gpt-5.6-terra":  ModelRate(openAI: 2,    output: 12,   cached: 0.20),
+        "gpt-5.6-luna":   ModelRate(openAI: 0.20, output: 1.20, cached: 0.02),
+        "gpt-5.5":        ModelRate(openAI: 5,    output: 30,   cached: 0.50),
+        "gpt-5.5-pro":    ModelRate(openAI: 30,   output: 180,  cached: 30),
+        "gpt-5.4":        ModelRate(openAI: 2.50, output: 15,   cached: 0.25),
+        "gpt-5.4-mini":   ModelRate(openAI: 0.75, output: 4.50, cached: 0.075),
+        "gpt-5.4-nano":   ModelRate(openAI: 0.20, output: 1.25, cached: 0.02),
+        "gpt-5.4-pro":    ModelRate(openAI: 30,   output: 180,  cached: 30),
+        "gpt-5.3-codex":  ModelRate(openAI: 1.75, output: 14,   cached: 0.175),
+        "gpt-5.2":        ModelRate(openAI: 1.75, output: 14,   cached: 0.175),
+        "gpt-5.2-pro":    ModelRate(openAI: 21,   output: 168,  cached: 21),
+        "gpt-5.1":        ModelRate(openAI: 1.25, output: 10,   cached: 0.125),
+        "gpt-5":          ModelRate(openAI: 1.25, output: 10,   cached: 0.125),
+        "gpt-5-mini":     ModelRate(openAI: 0.25, output: 2,    cached: 0.025),
+        "gpt-5-nano":     ModelRate(openAI: 0.05, output: 0.40, cached: 0.005),
+        "gpt-5-pro":      ModelRate(openAI: 15,   output: 120,  cached: 15),
+        "gpt-5-search-api": ModelRate(openAI: 1.25, output: 10, cached: 0.125)
+    ], effective: "2026-09-16")
+
+    /// Exact match, or the same id with a trailing `-YYYYMMDD` snapshot date
+    /// removed, since `claude-haiku-4-5-20251001` is that same model.
+    ///
+    /// General prefix matching would be wrong: `gpt-5-codex` is not `gpt-5`, and
+    /// the codex variants are priced differently from the base models they share
+    /// a prefix with. An unrecognized id returns nil and is reported as unpriced.
     public func rate(for model: String) -> ModelRate? {
         if let exact = rates[model] { return exact }
-        let matches = rates.keys.filter { model.hasPrefix($0) }
-        guard let longest = matches.max(by: { $0.count < $1.count }) else { return nil }
-        return rates[longest]
+        let parts = model.split(separator: "-")
+        if let last = parts.last, last.count == 8, last.allSatisfy(\.isNumber) {
+            return rates[parts.dropLast().joined(separator: "-")]
+        }
+        return nil
     }
 
     /// Merges user-supplied rates over the bundled ones. A malformed file is

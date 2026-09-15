@@ -43,11 +43,12 @@ final class PricingTests: XCTestCase {
 
     func testUnknownModelContributesNothingAndIsCounted() {
         let tokens = LogTokens(input: 5_000_000, output: 5_000_000, cacheRead: 0, cacheWrite: 0)
-        let estimate = PricingTable.bundled.estimate([event(tokens, model: "gpt-6-astra")])
+        // codex-auto-review has no published rate on either pricing page.
+        let estimate = PricingTable.bundled.estimate([event(tokens, model: "codex-auto-review")])
         XCTAssertEqual(estimate.amount, 0)
         XCTAssertEqual(estimate.pricedRecords, 0)
         XCTAssertEqual(estimate.unpricedRecords, 1)
-        XCTAssertEqual(estimate.unpricedModels, ["gpt-6-astra"])
+        XCTAssertEqual(estimate.unpricedModels, ["codex-auto-review"])
         XCTAssertFalse(estimate.isComplete)
     }
 
@@ -68,7 +69,36 @@ final class PricingTests: XCTestCase {
 
     func testUnrelatedPrefixDoesNotMatch() {
         XCTAssertNil(PricingTable.bundled.rate(for: "claude"))
-        XCTAssertNil(PricingTable.bundled.rate(for: "gpt-5.4"))
+        XCTAssertNil(PricingTable.bundled.rate(for: "claude-opus"))
+    }
+
+    /// A codex variant is a different model from the base id it shares a prefix
+    /// with, and is priced differently, so it must not inherit that rate.
+    func testCodexVariantsDoNotInheritBaseModelRates() {
+        XCTAssertNotNil(PricingTable.bundled.rate(for: "gpt-5"))
+        XCTAssertNil(PricingTable.bundled.rate(for: "gpt-5-codex"))
+        XCTAssertNotNil(PricingTable.bundled.rate(for: "gpt-5.2"))
+        XCTAssertNil(PricingTable.bundled.rate(for: "gpt-5.2-codex"))
+        XCTAssertNil(PricingTable.bundled.rate(for: "codex-auto-review"))
+        // The one codex model with published pricing is matched exactly.
+        XCTAssertEqual(PricingTable.bundled.rate(for: "gpt-5.3-codex")?.input, 1.75)
+    }
+
+    func testPublishedAnthropicRatesAreTranscribedNotDerived() {
+        // Fable 5.1 reads cache at 0.025x base, not the usual 0.1x.
+        XCTAssertEqual(PricingTable.bundled.rate(for: "claude-fable-5-1")?.cacheRead, 0.25)
+        XCTAssertEqual(PricingTable.bundled.rate(for: "claude-fable-5")?.cacheRead, 1)
+        XCTAssertEqual(PricingTable.bundled.rate(for: "claude-opus-5")?.cacheWrite1h, 10)
+        XCTAssertEqual(PricingTable.bundled.rate(for: "claude-sonnet-5")?.input, 2)
+        XCTAssertEqual(PricingTable.bundled.rate(for: "claude-haiku-3-5")?.output, 4)
+    }
+
+    func testOpenAIModelsHaveNoCacheWritePremium() {
+        let rate = PricingTable.bundled.rate(for: "gpt-6-astra")
+        XCTAssertEqual(rate?.input, 10)
+        XCTAssertEqual(rate?.cacheRead, 1)
+        XCTAssertEqual(rate?.cacheWrite5m, 10)
+        XCTAssertEqual(rate?.cacheWrite1h, 10)
     }
 
     func testUserTableOverridesAndExtendsBundledRates() throws {
@@ -100,7 +130,7 @@ final class PricingTests: XCTestCase {
         let priced = LogTokens(input: 1_000_000, output: 0, cacheRead: 0, cacheWrite: 0)
         let estimate = PricingTable.bundled.estimate([
             event(priced, model: "claude-opus-5"),
-            event(priced, model: "gpt-5.4"),
+            event(priced, model: "codex-auto-review"),
             event(priced, model: nil)
         ])
         XCTAssertEqual(estimate.amount, 5, accuracy: 0.0001)

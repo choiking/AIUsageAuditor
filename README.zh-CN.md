@@ -1,6 +1,8 @@
-# Agent Meter（编程 Agent 用量计）
+# 码表（Agent Meter）
 
 [English](README.md) · [中文](README.zh-CN.md)
+
+「码表」取自自行车与汽车上的码表，一眼看出跑了多远、跑得多快；这里的「码」同时指代码。应用以 `码表.app` 发布，英文界面下仍叫 Agent Meter。
 
 一款本地运行的 macOS 菜单栏应用，读取 **Claude Code** 和 **Codex** 的日志文件，按产生来源分组展示日志中记录的 token 用量。
 
@@ -11,18 +13,18 @@
 
 ## 界面截图
 
-![Agent Meter 面板](Docs/images/dashboard.png)
+![码表 面板](Docs/images/dashboard.png)
 
-今日全部日志来源的合计，并按日志入口分类展开。
+今日全部日志来源的合计，并按日志入口分类展开。界面支持中文与英文。
 
 ## 安装
 
-从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **Agent Meter.app** 拖进「应用程序」。
+从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **码表.app** 拖进「应用程序」。
 
 该构建使用 ad-hoc 签名且未经过公证（notarize），因此首次打开时会被 macOS 拦截，提示信息常常会误导性地说应用「已损坏」。这其实只是隔离（quarantine）标记。**右键点击应用 → 打开 → 打开**，或执行：
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
+xattr -dr com.apple.quarantine "/Applications/码表.app"
 ```
 
 需要 **Apple Silicon** 芯片和 **macOS 13 及以上**。Intel 芯片和 macOS 13 上的实际表现未经验证。从源码自行构建则完全不会遇到上述 Gatekeeper 拦截。
@@ -32,12 +34,14 @@ xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
 点击菜单栏上的 token 总数即可打开面板。也可以直接显示：
 
 ```sh
-open "build/Agent Meter.app" --args --show
+open "build/码表.app" --args --show
 ```
 
 面板分为**「用量」**和**「分析」**两个标签页。「用量」下又分 **Today（今天）** 和 **Imported history（导入的历史）** 两个区间，展示输入/输出总量、缓存明细、Codex 推理（reasoning）明细、各来源的记录数、最近一次用量时间，以及明确的数据质量警告。无论面板切换到哪个区间，菜单栏始终显示今天已接受的输入/输出。
 
 来源列表分为两层。**Claude Code** 和 **Codex** 是顶层分类，各自显示该工具的合计；其下的入口行再按具体来源拆分。两个分类**默认折叠**，并标注各自包含多少个入口——点击即可展开并选中该分类。点选任意一层都会切换下方的明细，且顶层的数字正好等于其下各入口行之和。若折叠时选中的是其下某个入口，选中项会自动上移到该分类，避免明细描述一个已隐藏的行。展开状态仅在本次运行中有效，不会跨启动保留。
+
+**界面语言**在面板底部的 `⋯` 菜单中切换：**跟随系统**、**中文**、**English**。跟随系统表示系统语言为中文时显示中文，其余显示英文。该选择会按用户保存并即时生效；它只影响显示文本，账本、诊断报告与 `LogInspector` 的输出不随语言变化。
 
 首次扫描会导入保留下来的历史记录。之后每五秒检查一次，且只读取新追加的字节。暂停会停止本次运行的扫描，恢复后会补齐期间的数据。切换来源只改变展示的明细，不改变监控范围。
 
@@ -144,7 +148,7 @@ Codex 不上报缓存写入的 TTL 拆分。记录中缺失的计数会显示为
 
 ## 隐私
 
-账本文件位于 `~/Library/Application Support/AIUsageAuditor/log-usage.json`（该目录沿用改名为 Agent Meter 之前的旧名，以免早期版本写入的历史记录失联），以原子方式写入，文件权限 `0600`，目录权限 `0700`。其中仅保存数值快照、时间戳、已识别的来源元数据、哈希后的标识和读取检查点。
+账本文件位于 `~/Library/Application Support/AIUsageAuditor/log-usage.json`（该目录沿用最早的旧名，历经 Agent Meter、码表 两次更名都未改动，以免早期版本写入的历史记录失联），以原子方式写入，文件权限 `0600`，目录权限 `0700`。其中仅保存数值快照、时间戳、已识别的来源元数据、哈希后的标识和读取检查点。
 
 **账本绝不保存 prompt、模型回复、工具输出、项目路径、原始 session/request ID 或任何凭据。** 源 JSONL 文件本身确实包含对话内容，但解析全程在本地内存中完成。`diagnostics.json` 只记录聚合的扫描状态和各来源计数。
 

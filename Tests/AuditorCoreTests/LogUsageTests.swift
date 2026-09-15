@@ -50,7 +50,12 @@ final class LogUsageTests: XCTestCase {
         XCTAssertEqual(LogSource.classify("codex_vscode", tool: .codex).0, .codexIDE)
         XCTAssertEqual(LogSource.classify("codex-tui", tool: .codex).0, .codexCLI)
         XCTAssertEqual(LogSource.classify(nil, tool: .codex).0, .codexUnknown)
-        XCTAssertEqual(LogSource.classify("PRIVATE arbitrary origin", tool: .codex).1, "未提供或未识别")
+        XCTAssertEqual(LogSource.classify("PRIVATE arbitrary origin", tool: .codex).1, LogProvenance.unreported)
+        XCTAssertEqual(LogProvenance.display(LogProvenance.unreported, .english), "not reported")
+        XCTAssertEqual(LogProvenance.display(LogProvenance.unreported, .chinese), "未提供或未识别")
+        // Ledgers written before the English interface stored the old literal.
+        XCTAssertEqual(LogProvenance.display("未提供或未识别", .english), "not reported")
+        XCTAssertEqual(LogProvenance.display("codex_vscode", .english), "codex_vscode")
         var state = LogFileState(tool: .codex)
         LogParser.ingest(try encoded(meta()), state: &state)
         LogParser.ingest(try encoded(codex(100, second: 1)), state: &state)

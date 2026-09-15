@@ -10,7 +10,8 @@ swift build -c release --product AgentMeter --scratch-path "$BUILD_ROOT/spm" --c
 swift build -c release --product AXInspector --scratch-path "$BUILD_ROOT/spm" --cache-path "$BUILD_ROOT/cache" "$@"
 swift build -c release --product LogInspector --scratch-path "$BUILD_ROOT/spm" --cache-path "$BUILD_ROOT/cache" "$@"
 BIN_DIR="$(swift build -c release --show-bin-path --scratch-path "$BUILD_ROOT/spm")"
-APP="$PROJECT_DIR/build/Agent Meter.app"
+# The bundle is named 码表; the executable inside keeps its ASCII name.
+APP="$PROJECT_DIR/build/码表.app"
 mkdir -p "$APP/Contents/MacOS"
 cp "$BIN_DIR/AgentMeter" "$APP/Contents/MacOS/AgentMeter"
 cp Config/Info.plist "$APP/Contents/Info.plist"

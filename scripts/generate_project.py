@@ -23,7 +23,7 @@ def serialize(value, depth=0):
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 package = add("package", "XCLocalSwiftPackageReference", relativePath=".")
-app_product = add("app-product", "PBXFileReference", explicitFileType="wrapper.application", path="Agent Meter.app", sourceTree="BUILT_PRODUCTS_DIR")
+app_product = add("app-product", "PBXFileReference", explicitFileType="wrapper.application", path="码表.app", sourceTree="BUILT_PRODUCTS_DIR")
 test_product = add("test-product", "PBXFileReference", explicitFileType="wrapper.cfbundle", path="AgentMeterTests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
 groups = []
 
@@ -64,7 +64,7 @@ test_sources = source_phase("Tests", "Tests/AuditorCoreTests")
 app_deps, app_frameworks = dependencies("App", ["AuditorCore", "AccessibilityKit"])
 test_deps, test_frameworks = dependencies("Tests", ["AuditorCore"])
 app_config = configurations("app", {
-    "PRODUCT_NAME": "Agent Meter", "PRODUCT_BUNDLE_IDENTIFIER": "local.agentmeter.app",
+    "PRODUCT_NAME": "码表", "PRODUCT_BUNDLE_IDENTIFIER": "local.agentmeter.app",
     "INFOPLIST_FILE": "Config/Info.plist", "CODE_SIGN_STYLE": "Automatic", "CODE_SIGN_IDENTITY": "-",
     "ENABLE_APP_SANDBOX": "NO", "ENABLE_HARDENED_RUNTIME": "YES",
     "LD_RUNPATH_SEARCH_PATHS": ["$(inherited)", "@executable_path/../Frameworks"],
@@ -77,7 +77,7 @@ test_config = configurations("test", {
 })
 app = add("app-target", "PBXNativeTarget", name="AgentMeterApp", buildConfigurationList=app_config,
           buildPhases=[app_sources, app_frameworks], buildRules=[], dependencies=[],
-          packageProductDependencies=app_deps, productName="Agent Meter", productReference=app_product,
+          packageProductDependencies=app_deps, productName="码表", productReference=app_product,
           productType="com.apple.product-type.application")
 tests = add("test-target", "PBXNativeTarget", name="AgentMeterTests", buildConfigurationList=test_config,
             buildPhases=[test_sources, test_frameworks], buildRules=[], dependencies=[],
@@ -100,7 +100,7 @@ project_dir.mkdir(exist_ok=True)
 def reference(target, name, product):
     return f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{target}" BuildableName="{product}" BlueprintName="{name}" ReferencedContainer="container:AgentMeter.xcodeproj"/>'
 
-app_ref = reference(app, "AgentMeterApp", "Agent Meter.app")
+app_ref = reference(app, "AgentMeterApp", "码表.app")
 test_ref = reference(tests, "AgentMeterTests", "AgentMeterTests.xctest")
 scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
 <Scheme LastUpgradeVersion="1600" version="1.7">

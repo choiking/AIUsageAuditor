@@ -1,9 +1,21 @@
 import Foundation
 
 public enum ContentCategory: String, CaseIterable, Identifiable {
-    case development = "编程开发", debugging = "排错测试", research = "研究问答"
-    case writing = "写作翻译", design = "设计创作", planning = "规划管理", other = "其他"
+    /// Raw values are stable keys, not display text: they identify the category
+    /// in the LogInspector report regardless of the interface language.
+    case development, debugging, research, writing, design, planning, other
     public var id: String { rawValue }
+    public func name(_ language: AppLanguage = .system) -> String {
+        switch self {
+        case .development: return language.pick("编程开发", "Coding")
+        case .debugging: return language.pick("排错测试", "Debugging & tests")
+        case .research: return language.pick("研究问答", "Research & Q&A")
+        case .writing: return language.pick("写作翻译", "Writing & translation")
+        case .design: return language.pick("设计创作", "Design")
+        case .planning: return language.pick("规划管理", "Planning")
+        case .other: return language.pick("其他", "Other")
+        }
+    }
     public var symbol: String {
         switch self {
         case .development: return "chevron.left.forwardslash.chevron.right"

@@ -24,19 +24,19 @@ public enum LogSource: String, Codable, CaseIterable, Identifiable {
     case codexDesktop, codexCLI, codexIDE, codexSDK, codexBrowser, codexUnknown
     public var id: String { rawValue }
     public var tool: LogTool { rawValue.hasPrefix("claude") ? .claudeCode : .codex }
-    public var name: String {
+    public func name(_ language: AppLanguage = .system) -> String {
         switch self {
         case .claudeDesktop: return "Claude Code · Desktop"
         case .claudeCLI: return "Claude Code · CLI"
         case .claudeIDE: return "Claude Code · IDE"
         case .claudeSDK: return "Claude Code · SDK"
-        case .claudeUnknown: return "Claude Code · 来源未知"
+        case .claudeUnknown: return "Claude Code · " + language.pick("来源未知", "unknown source")
         case .codexDesktop: return "Codex · Desktop"
         case .codexCLI: return "Codex · CLI / Exec"
         case .codexIDE: return "Codex · VS Code"
         case .codexSDK: return "Codex · SDK"
-        case .codexBrowser: return "Codex · 浏览器扩展"
-        case .codexUnknown: return "Codex · 来源未知"
+        case .codexBrowser: return "Codex · " + language.pick("浏览器扩展", "browser extension")
+        case .codexUnknown: return "Codex · " + language.pick("来源未知", "unknown source")
         }
     }
     public static func classify(_ value: String?, tool: LogTool) -> (LogSource, String) {
@@ -52,7 +52,7 @@ public enum LogSource: String, Codable, CaseIterable, Identifiable {
             "codex-chrome-extension-sidepanel": .codexBrowser
         ]
         if let value, let source = mapping[value] { return (source, value) }
-        return (tool == .claudeCode ? .claudeUnknown : .codexUnknown, "未提供或未识别")
+        return (tool == .claudeCode ? .claudeUnknown : .codexUnknown, LogProvenance.unreported)
     }
 }
 
@@ -152,7 +152,7 @@ public struct LogFileState: Codable, Equatable {
     public var droppingLongLine = false
     public var session: String?
     public var source: LogSource
-    public var provenance = "未提供或未识别"
+    public var provenance = LogProvenance.unreported
     /// Codex records the model per turn, not per usage event.
     public var model: String?
     public var records: [LogRecord] = []

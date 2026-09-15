@@ -32,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AgentMeter-${{ github.sha }}
-          path: build/Agent Meter.app
+          path: build/码表.app
           retention-days: 14

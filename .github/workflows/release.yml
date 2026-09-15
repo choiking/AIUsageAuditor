@@ -29,15 +29,15 @@ jobs:
 
       - name: Stamp bundle version from tag
         run: |
-          plist="build/Agent Meter.app/Contents/Info.plist"
+          plist="build/码表.app/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.number }}" "$plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" "$plist"
-          codesign --force --sign - "build/Agent Meter.app"
+          codesign --force --sign - "build/码表.app"
 
       - name: Package
         run: |
           ditto -c -k --sequesterRsrc --keepParent \
-            "build/Agent Meter.app" \
+            "build/码表.app" \
             "build/AgentMeter-${GITHUB_REF_NAME}-macos-arm64.zip"
 
       - name: Publish release
@@ -46,18 +46,18 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             "build/AgentMeter-${GITHUB_REF_NAME}-macos-arm64.zip" \
-            --title "Agent Meter $GITHUB_REF_NAME" \
+            --title "码表 Agent Meter $GITHUB_REF_NAME" \
             --notes-file - <<'NOTES'
           Local macOS menu-bar app that reads Claude Code and Codex log files and shows how many tokens they report using, grouped by which tool produced them.
 
           ## Install
 
-          Download the zip below, unzip, and drag **Agent Meter.app** to Applications.
+          Download the zip below, unzip, and drag **码表.app** to Applications.
 
           This build is **ad-hoc signed and not notarized**, so macOS blocks it on first launch, often with a misleading "damaged" message. That is the quarantine flag. **Right-click the app → Open → Open**, or:
 
           ```sh
-          xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
+          xattr -dr com.apple.quarantine "/Applications/码表.app"
           ```
 
           Requires **Apple Silicon** and **macOS 13+**.

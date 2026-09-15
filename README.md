@@ -1,6 +1,8 @@
-# Agent Meter
+# Agent Meter (码表)
 
 [English](README.md) · [中文](README.zh-CN.md)
+
+The app is called **码表** — the everyday Chinese word for a speedometer, with 码 (code) doing double duty. It ships as `码表.app`; the interface calls itself Agent Meter in English.
 
 A local macOS menu-bar app that reads **Claude Code** and **Codex** log files and shows how many tokens they report using, grouped by which tool produced them.
 
@@ -11,18 +13,18 @@ No API key, proxy, certificate, or Accessibility permission required. Nothing le
 
 ## Screenshot
 
-![Agent Meter dashboard](Docs/images/dashboard.png)
+![码表 dashboard](Docs/images/dashboard.png)
 
-Today's totals across all log sources, broken down by entry point. The interface is currently in Chinese only.
+Today's totals across all log sources, broken down by entry point. The interface is available in English and Chinese.
 
 ## Install
 
-Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **Agent Meter.app** to Applications.
+Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **码表.app** to Applications.
 
 The build is ad-hoc signed and not notarized, so macOS blocks it on first launch — often with a misleading "damaged" message. That's the quarantine flag. **Right-click the app → Open → Open**, or:
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/Agent Meter.app"
+xattr -dr com.apple.quarantine "/Applications/码表.app"
 ```
 
 Requires **Apple Silicon** and **macOS 13+**. Intel and macOS 13 behavior are unverified. Building from source avoids the Gatekeeper step entirely.
@@ -32,12 +34,14 @@ Requires **Apple Silicon** and **macOS 13+**. Intel and macOS 13 behavior are un
 Click the token totals in the menu bar to open the dashboard. To show it immediately:
 
 ```sh
-open "build/Agent Meter.app" --args --show
+open "build/码表.app" --args --show
 ```
 
-The dashboard has two tabs: **Usage** (用量) and **Analysis** (分析). Usage has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
+The dashboard has two tabs: **Usage** and **Analysis**. Usage has **Today** and **Imported history**, with input/output totals, cache breakdowns, Codex reasoning breakdowns, per-source counts, last usage time, and data-quality warnings. The menu bar always shows today's accepted input/output, whichever period the dashboard is on.
 
 The source list is two levels. **Claude Code** and **Codex** are the top-level categories, each showing that tool's combined totals; the entrypoint rows below each one break it down by where the usage came from. Both categories start **collapsed**, with a count of how many entrypoints they hold — click one to expand it and to select it. Selecting either level changes the details pane, and a tool's figures are exactly the sum of its entrypoint rows. Collapsing a category whose entrypoint is selected moves the selection up to the category, so the details pane never describes a hidden row. Expansion is per-run and is not remembered between launches.
+
+The **language** is set from the `⋯` menu at the bottom of the panel: **Follow system**, **中文**, or **English**. Follow system means Chinese for a Chinese system language and English for anything else. The choice is remembered per user and switches the interface immediately; it changes display text only — the ledger, the diagnostics report, and `LogInspector` output stay language-independent.
 
 The first scan imports retained history. After that it checks every five seconds and reads only appended bytes. Pause stops scanning for this run; resuming backfills. Selecting a source changes the details, not what is monitored.
 
@@ -45,7 +49,7 @@ The first scan imports retained history. After that it checks every five seconds
 
 ## Content analysis
 
-The **分析 (Analysis)** tab groups user prompts into development, debugging/testing, research/questions, writing/translation, design, planning, and other. Switch between **Today** and **History** (including today), filter by source, or select a category to search and expand matching prompts. It also shows session counts, assistant message counts, and tool activity for the selected period and source.
+The **Analysis** tab groups user prompts into development, debugging/testing, research/questions, writing/translation, design, planning, and other. Switch between **Today** and **History** (including today), filter by source, or select a category to search and expand matching prompts. It also shows session counts, assistant message counts, and tool activity for the selected period and source.
 
 Classification uses local Chinese/English keyword rules, not a model, and can be wrong. Percentages represent prompt counts, not tokens. Known system wrappers, tool results, Claude subagent prompts, and Codex internal review/subagent sessions are excluded; unrecognized injected content may remain. Claude streaming message snapshots and copied logs are deduplicated. Codex event/response copies with matching text within five seconds are reconciled. Assistant counts describe recorded messages, not model requests. Only explicit Claude tool errors are counted; Codex error formats are not interpreted.
 
@@ -144,7 +148,7 @@ To add or override rates, create `~/Library/Application Support/AIUsageAuditor/p
 
 ## Privacy
 
-The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` (the folder keeps its original name so history written before the rename to Agent Meter is not orphaned) is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
+The ledger at `~/Library/Application Support/AIUsageAuditor/log-usage.json` (the folder keeps its original name so history written before the renames to Agent Meter and then 码表 is not orphaned) is written atomically with mode `0600` (directory `0700`). It holds numeric snapshots, timestamps, recognized source metadata, hashed identities, and read checkpoints.
 
 **The ledger never stores prompts, responses, tool outputs, project paths, raw session/request IDs, or credentials.** The source JSONL files do contain transcripts; parsing happens locally, in memory. `diagnostics.json` records only aggregate scan status and per-source counters.
 

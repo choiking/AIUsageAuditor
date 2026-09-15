@@ -5,6 +5,7 @@ import AuditorCore
 struct AuditorPanel: View {
     @ObservedObject var model: AuditorModel
     @Environment(\.openWindow) private var openWindow
+    private var copy: Copy { model.copy }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -12,15 +13,17 @@ struct AuditorPanel: View {
                     Image(systemName: "chart.bar.xaxis").font(.title2).foregroundStyle(.teal)
                         .padding(10).background(.teal.opacity(0.10), in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Agent Meter").font(.headline)
-                        Text("LOG USAGE  ·  日志上报用量").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
+                        Text(copy.appName).font(.headline)
+                        Text(copy.subtitle).font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Circle().fill(model.error != nil ? .red : (model.paused ? .orange : .teal)).frame(width: 8, height: 8)
                 }
                 tabBar
-                Picker("统计期间", selection: $model.period) {
-                    ForEach(LogPeriod.allCases, id: \.self) { period in Text(model.tab == .analysis && period == .all ? "历史" : period.rawValue).tag(period) }
+                Picker(copy.period, selection: $model.period) {
+                    ForEach(LogPeriod.allCases, id: \.self) { period in
+                        Text(model.tab == .analysis && period == .all ? copy.history : copy.periodName(period)).tag(period)
+                    }
                 }.pickerStyle(.segmented)
 
                 if model.tab == .analysis {
@@ -28,7 +31,7 @@ struct AuditorPanel: View {
                 } else {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text(model.period == .today ? "今日 · 全部日志来源" : "已导入历史 · 全部来源").font(.subheadline.weight(.semibold))
+                        Text(copy.totalsHeading(model.period)).font(.subheadline.weight(.semibold))
                         Spacer()
                         if model.scanning { ProgressView().controlSize(.small) }
                     }
@@ -37,12 +40,12 @@ struct AuditorPanel: View {
                         Divider().frame(height: 40)
                         metric("↓ OUTPUT", value: model.totals.output, color: .indigo)
                     }
-                    Text("\(model.totals.records.formatted()) 条去重用量记录 · 总计 \(model.totals.total.formatted()) tokens")
+                    Text(copy.recordSummary(records: model.totals.records, total: model.totals.total))
                         .font(.caption).foregroundStyle(.secondary)
                 }.padding(16).background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 14))
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("按工具与日志入口分类").font(.subheadline.weight(.semibold))
+                    Text(copy.byToolHeading).font(.subheadline.weight(.semibold))
                     ForEach(model.tools) { tool in
                         VStack(alignment: .leading, spacing: 6) {
                             row(for: .tool(tool), emphasised: true)
@@ -57,17 +60,17 @@ struct AuditorPanel: View {
                 }
 
                 VStack(alignment: .leading, spacing: 9) {
-                    Text(model.selection.name).font(.subheadline.weight(.semibold))
+                    Text(model.selection.name(model.language)).font(.subheadline.weight(.semibold))
                     Text(model.provenance).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     breakdown
                     costRow
 
                     if let date = model.lastUsage {
-                        Text("最近用量记录：\(date.formatted(date: .numeric, time: .shortened))")
+                        Text(copy.lastUsage(date.formatted(date: .numeric, time: .shortened)))
                             .font(.caption).foregroundStyle(.secondary)
                         if model.selectedTotals.records == 0 {
-                            Text("当前统计期间没有可计入记录；不代表账号实际消耗为零。")
+                            Text(copy.emptyPeriodNote)
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -78,24 +81,26 @@ struct AuditorPanel: View {
                     Label(model.status, systemImage: model.paused ? "pause.circle" : "doc.text.magnifyingglass")
                         .font(.caption)
                     if let date = model.result?.checkedAt {
-                        Text("最近检查 \(date.formatted(date: .omitted, time: .standard)) · Claude Code \(model.result?.filesByTool[.claudeCode] ?? 0) 个文件 · Codex \(model.result?.filesByTool[.codex] ?? 0) 个文件")
+                        Text(copy.lastChecked(date.formatted(date: .omitted, time: .standard),
+                                             claude: model.result?.filesByTool[.claudeCode] ?? 0,
+                                             codex: model.result?.filesByTool[.codex] ?? 0))
                             .font(.system(size: 10)).foregroundStyle(.secondary)
                     }
                     if let error = model.error { Text(error).font(.caption).foregroundStyle(.red) }
                     ForEach(model.warnings, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
                 }.fixedSize(horizontal: false, vertical: true)
-                Text("仅统计本机 Claude 编程代理与 Codex 日志，不覆盖普通 Claude / ChatGPT 聊天。输入已含缓存，输出可能含推理，不重复相加；用量不等于订阅额度或账单。")
+                Text(copy.footerNote)
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 HStack {
-                    Button(model.paused ? "恢复采集" : "暂停采集") { model.togglePaused() }.disabled(model.demo)
-                    Button("刷新") { model.refreshNow() }.disabled(model.demo || model.scanning || model.analyzing || model.paused)
-                    Menu {
-                        Button("打开来源日志目录") { model.openLogFolder() }
-                        Button("打开本地账本目录") { model.openDataFolder() }
-                        Button("在独立窗口查看") { openWindow(id: "preview"); NSApp.activate(ignoringOtherApps: true) }
-                    } label: { Image(systemName: "ellipsis.circle") }.menuStyle(.borderlessButton).frame(width: 24)
+                    Button(model.paused ? copy.resume : copy.pause) { model.togglePaused() }.disabled(model.demo)
+                    Button(copy.refresh) { model.refreshNow() }.disabled(model.demo || model.scanning || model.analyzing || model.paused)
+                    OverflowMenu(copy: copy, language: $model.language,
+                                 showLogFolder: model.openLogFolder,
+                                 showDataFolder: model.openDataFolder,
+                                 showWindow: { openWindow(id: "preview"); NSApp.activate(ignoringOtherApps: true) })
+                        .equatable()
                     Spacer()
-                    Button("退出") { NSApp.terminate(nil) }.foregroundStyle(.secondary)
+                    Button(copy.quit) { NSApp.terminate(nil) }.foregroundStyle(.secondary)
                 }.controlSize(.small)
             }.padding(22)
         }.frame(width: 460, height: panelHeight)
@@ -112,6 +117,32 @@ struct AuditorPanel: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
+    /// Pulled out of the panel body and made equatable so that a finished scan
+    /// cannot rebuild this menu while it is open underneath the pointer. Only a
+    /// language change alters anything inside it.
+    private struct OverflowMenu: View, Equatable {
+        let copy: Copy
+        @Binding var language: AppLanguage
+        let showLogFolder: () -> Void
+        let showDataFolder: () -> Void
+        let showWindow: () -> Void
+        static func == (a: OverflowMenu, b: OverflowMenu) -> Bool { a.copy.language == b.copy.language }
+        var body: some View {
+            Menu {
+                Button(copy.openLogFolder) { showLogFolder() }
+                Button(copy.openDataFolder) { showDataFolder() }
+                Button(copy.openWindow) { showWindow() }
+                Divider()
+                // A submenu rather than a preferences window: the panel has no
+                // other settings to keep it company.
+                Picker(copy.languageMenu, selection: $language) {
+                    ForEach(AppLanguage.allCases) { language in Text(language.menuLabel).tag(language) }
+                }
+            } label: { Image(systemName: "ellipsis.circle") }
+            .menuStyle(.borderlessButton).frame(width: 24)
+        }
+    }
+
     /// Page navigation, styled as an underlined tab bar rather than a second
     /// segmented picker. The period control below it is a filter, not
     /// navigation, and the two were previously indistinguishable.
@@ -126,7 +157,7 @@ struct AuditorPanel: View {
                         VStack(spacing: 6) {
                             HStack(spacing: 5) {
                                 Image(systemName: tab.symbol).font(.system(size: 11, weight: .semibold))
-                                Text(tab.rawValue).font(.callout.weight(active ? .semibold : .regular))
+                                Text(copy.tabName(tab)).font(.callout.weight(active ? .semibold : .regular))
                             }
                             .foregroundStyle(active ? Color.teal : Color.secondary)
                             .frame(maxWidth: .infinity)
@@ -140,7 +171,7 @@ struct AuditorPanel: View {
                     .accessibilityAddTraits(active ? [.isButton, .isSelected] : .isButton)
                 }
             }
-            Text(model.tab.caption).font(.caption2).foregroundStyle(.secondary)
+            Text(copy.tabCaption(model.tab)).font(.caption2).foregroundStyle(.secondary)
         }
         .animation(.easeInOut(duration: 0.15), value: model.tab)
     }
@@ -151,27 +182,27 @@ struct AuditorPanel: View {
     @ViewBuilder private var breakdown: some View {
         let totals = model.selectedTotals
         if model.selection.tool == .claudeCode {
-            detail("未缓存输入", field: "input_tokens", value: totals.uncachedInput, unknown: totals.missingCache)
-            detail("缓存读取", field: "cache_read_input_tokens", value: totals.cacheRead, unknown: totals.missingCache)
-            detail("缓存写入", field: "cache_creation_input_tokens", value: totals.cacheWrite, unknown: totals.missingCache)
-            detail("· 1 小时 TTL", field: "ephemeral_1h_input_tokens", value: totals.cacheWrite1h,
+            detail(copy.uncachedInput, field: "input_tokens", value: totals.uncachedInput, unknown: totals.missingCache)
+            detail(copy.cacheRead, field: "cache_read_input_tokens", value: totals.cacheRead, unknown: totals.missingCache)
+            detail(copy.cacheWrite, field: "cache_creation_input_tokens", value: totals.cacheWrite, unknown: totals.missingCache)
+            detail(copy.ttl1h, field: "ephemeral_1h_input_tokens", value: totals.cacheWrite1h,
                    unknown: totals.missingWriteTTL, nested: true)
-            detail("· 5 分钟 TTL", field: "ephemeral_5m_input_tokens", value: totals.cacheWrite5m,
+            detail(copy.ttl5m, field: "ephemeral_5m_input_tokens", value: totals.cacheWrite5m,
                    unknown: totals.missingWriteTTL, nested: true)
-            detail("输出", field: "output_tokens", value: totals.output, unknown: false)
-            Text("前三项相加即为 INPUT；两种 TTL 相加即为缓存写入。")
+            detail(copy.output, field: "output_tokens", value: totals.output, unknown: false)
+            Text(copy.claudeBreakdownNote)
                 .font(.caption2).foregroundStyle(.secondary)
         } else {
-            detail("输入", field: "input_tokens", value: totals.input, unknown: false)
-            detail("· 其中缓存读取", field: "cached_input_tokens", value: totals.cacheRead,
+            detail(copy.input, field: "input_tokens", value: totals.input, unknown: false)
+            detail(copy.ofWhichCacheRead, field: "cached_input_tokens", value: totals.cacheRead,
                    unknown: totals.missingCache, nested: true)
-            detail("· 其中缓存写入", field: "cache_write_input_tokens", value: totals.cacheWrite,
+            detail(copy.ofWhichCacheWrite, field: "cache_write_input_tokens", value: totals.cacheWrite,
                    unknown: totals.missingCache, nested: true)
-            detail("输出", field: "output_tokens", value: totals.output, unknown: false)
-            detail("· 其中推理", field: "reasoning_output_tokens", value: totals.reasoning,
+            detail(copy.output, field: "output_tokens", value: totals.output, unknown: false)
+            detail(copy.ofWhichReasoning, field: "reasoning_output_tokens", value: totals.reasoning,
                    unknown: totals.missingReasoning, nested: true)
-            detail("合计", field: "total_tokens", value: totals.total, unknown: false)
-            Text("缓存与推理是输入 / 输出的细分，已包含在内，不要重复相加。数值为相邻累计计数之差。")
+            detail(copy.total, field: "total_tokens", value: totals.total, unknown: false)
+            Text(copy.codexBreakdownNote)
                 .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -193,25 +224,21 @@ struct AuditorPanel: View {
                             .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
                             .frame(width: 10)
                     }
-                    Text(selection.name)
+                    Text(selection.name(model.language))
                         .font(emphasised ? .callout.weight(.semibold) : .caption.weight(.semibold))
                     if case .tool(let tool) = selection, !model.isExpanded(tool) {
-                        Text("\(model.sources(in: tool).count) 项").font(.caption2).foregroundStyle(.secondary)
+                        Text(copy.entryCount(model.sources(in: tool).count)).font(.caption2).foregroundStyle(.secondary)
                     }
                     Spacer()
                     if selected { Image(systemName: "checkmark.circle.fill").foregroundStyle(.teal) }
                 }
-                if case .source(.claudeDesktop) = selection {
-                    Text("不包含普通 Chat 聊天").foregroundStyle(.secondary)
-                }
                 if present {
                     if totals.records == 0 {
-                        Text("当前期间暂无可计入的日志用量").foregroundStyle(.secondary)
+                        Text(copy.noCountableUsage).foregroundStyle(.secondary)
                     } else {
-                        Text("↑ \(totals.input.formatted())   ↓ \(totals.output.formatted())   · \(totals.records) 条")
-                            .monospacedDigit().foregroundStyle(.secondary)
+                        Text(copy.rowTotals(totals)).monospacedDigit().foregroundStyle(.secondary)
                     }
-                } else { Text("未发现用量记录").foregroundStyle(.secondary) }
+                } else { Text(copy.noRecordsFound).foregroundStyle(.secondary) }
             }.font(.caption).padding(emphasised ? 12 : 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(selected ? .teal.opacity(0.10)
@@ -228,37 +255,24 @@ struct AuditorPanel: View {
         Divider().padding(.vertical, 1)
         if cost.hasAnything {
             HStack(alignment: .firstTextBaseline) {
-                Text("API 目录价估算").font(.caption).foregroundStyle(.secondary)
+                Text(copy.costTitle).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Text(cost.amount, format: .currency(code: "USD"))
                     .font(.caption.weight(.semibold)).monospacedDigit()
             }
-            Text("按公开 API 单价折算，非账单、非订阅扣费。订阅用户按月付费，与此数字无关。")
+            Text(copy.costNote)
                 .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if !cost.isComplete {
-                Text(unpricedNote(cost)).font(.caption2).foregroundStyle(.orange)
+                Text(copy.unpricedNote(cost)).font(.caption2).foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
             }
         } else {
-            Text("当前来源无可定价记录").font(.caption).foregroundStyle(.secondary)
+            Text(copy.noPriceableRecords).font(.caption).foregroundStyle(.secondary)
             if !cost.unpricedModels.isEmpty {
-                Text(unpricedNote(cost)).font(.caption2).foregroundStyle(.secondary)
+                Text(copy.unpricedNote(cost)).font(.caption2).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-    }
-
-    private func unpricedNote(_ cost: CostEstimate) -> String {
-        var parts: [String] = []
-        if cost.unpricedRecords > 0 {
-            let models = cost.unpricedModels.sorted().prefix(3).joined(separator: "、")
-            parts.append("\(cost.unpricedRecords) 条记录的模型无内置单价（\(models)\(cost.unpricedModels.count > 3 ? " 等" : "")），未计入。")
-        }
-        if cost.unknownModelRecords > 0 {
-            parts.append("\(cost.unknownModelRecords) 条记录未标明模型，未计入。")
-        }
-        if !parts.isEmpty { parts.append("可在 pricing.json 中自行补充单价。") }
-        return parts.joined(separator: "")
     }
 
     /// `field` is the JSONL key this number is summed from; showing it keeps the
@@ -272,7 +286,7 @@ struct AuditorPanel: View {
                 .foregroundStyle(.tertiary).lineLimit(1).layoutPriority(-1)
             Spacer(minLength: 6)
             Text(model.selectedTotals.records == 0 ? "—"
-                 : (unknown ? "已知 \(value.formatted()) · 部分未上报" : value.formatted()))
+                 : (unknown ? copy.partiallyKnown(value) : value.formatted()))
                 .monospacedDigit()
         }
         .font(.caption).foregroundStyle(nested ? .tertiary : .secondary)

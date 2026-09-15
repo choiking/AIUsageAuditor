@@ -152,11 +152,18 @@ public final class LogScanner {
 
 public enum LogScanError: LocalizedError {
     case unsupportedStore, unreadableStore, writeFailed, writerRunning
-    public var errorDescription: String? {
+    public func message(_ language: AppLanguage = .system) -> String {
         switch self {
-        case .unsupportedStore, .unreadableStore: return "日志账本损坏或版本不支持；原文件已保留。"
-        case .writeFailed: return "日志账本保存失败；未发布本轮计数。"
-        case .writerRunning: return "已有 Auditor 实例正在写入日志账本。请关闭另一个实例。"
+        case .unsupportedStore, .unreadableStore:
+            return language.pick("日志账本损坏或版本不支持；原文件已保留。",
+                                 "The log ledger is corrupt or of an unsupported version; the original file was kept.")
+        case .writeFailed:
+            return language.pick("日志账本保存失败；未发布本轮计数。",
+                                 "Could not save the log ledger; this round's counts were not published.")
+        case .writerRunning:
+            return language.pick("已有 Auditor 实例正在写入日志账本。请关闭另一个实例。",
+                                 "Another Auditor instance is writing the log ledger. Close the other instance.")
         }
     }
+    public var errorDescription: String? { message() }
 }

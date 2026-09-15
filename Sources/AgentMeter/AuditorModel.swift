@@ -23,20 +23,12 @@ private actor LogWorker {
 }
 
 enum AuditorTab: String, CaseIterable, Identifiable {
-    case usage = "用量", analysis = "分析"
+    case usage, analysis
     var id: String { rawValue }
     var symbol: String {
         switch self {
         case .usage: return "gauge.medium"
         case .analysis: return "text.magnifyingglass"
-        }
-    }
-    /// One-line hint shown under the active tab, so the two pages are
-    /// distinguishable without opening both.
-    var caption: String {
-        switch self {
-        case .usage: return "token 计数与目录价估算"
-        case .analysis: return "prompt 内容索引与分类"
         }
     }
 }
@@ -52,10 +44,10 @@ enum MeterSelection: Hashable {
         case .source(let source): return source.tool
         }
     }
-    var name: String {
+    func name(_ language: AppLanguage) -> String {
         switch self {
         case .tool(let tool): return tool.name
-        case .source(let source): return source.name
+        case .source(let source): return source.name(language)
         }
     }
     func contains(_ source: LogSource) -> Bool {
@@ -66,7 +58,11 @@ enum MeterSelection: Hashable {
     }
 }
 
-enum LogPeriod: String, CaseIterable { case today = "今日", all = "已导入历史" }
+private let languageDefaultsKey = "InterfaceLanguage"
+
+/// Raw values are stable keys; the labels live in `Copy`. Diagnostics records
+/// the key, so a report stays readable whatever the interface language is.
+enum LogPeriod: String, CaseIterable { case today, all }
 
 @MainActor
 final class AuditorModel: ObservableObject {
@@ -75,6 +71,12 @@ final class AuditorModel: ObservableObject {
     @Published private(set) var analysis: ContentAnalysisResult?
     @Published private(set) var analyzing = false
     @Published var period: LogPeriod = .today
+    /// Interface language. Persisted per user; nothing else about the ledger or
+    /// the diagnostics report depends on it.
+    @Published var language: AppLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: languageDefaultsKey) ?? "") ?? .system {
+        didSet { UserDefaults.standard.set(language.rawValue, forKey: languageDefaultsKey) }
+    }
+    var copy: Copy { Copy(language: language) }
     @Published var selection: MeterSelection = .tool(.claudeCode)
     @Published var clock = Date()
     @Published private(set) var result: LogScanResult?
@@ -86,6 +88,10 @@ final class AuditorModel: ObservableObject {
     private let worker = LogWorker()
     private var loop: Task<Void, Never>?
     private var requestedScan = false
+    /// Re-entrancy guard, deliberately not `@Published`: `scanning` is, and a
+    /// steady-state rescan takes milliseconds, so flipping it on every cycle
+    /// republished twice for a spinner nobody could see.
+    private var refreshing = false
 
     var events: [LogEvent] { result?.summary.events ?? [] }
     var sources: [LogSource] {
@@ -131,32 +137,33 @@ final class AuditorModel: ObservableObject {
     var provenance: String {
         let values = Set(events.filter { selection.contains($0.source) }.map(\.provenance)).sorted()
         let key = selection.tool.provenanceKey
-        return key + " = " + (values.isEmpty ? "未发现记录" : values.joined(separator: ", "))
+        let shown = values.map { LogProvenance.display($0, language) }
+        return key + " = " + (shown.isEmpty ? copy.noProvenance : shown.joined(separator: ", "))
     }
     var menuTitle: String {
         guard result != nil else { return error == nil ? "◌ Logs" : "! Logs" }
         return "\(error == nil ? "" : "! ")↑\(today.input.formatted(.number.notation(.compactName))) ↓\(today.output.formatted(.number.notation(.compactName)))"
     }
     var status: String {
-        if error != nil { return "采集失败 · 显示上次成功结果" }
-        if demo { return "演示模式 · 模拟日志数据" }
-        if scanning { return "正在读取本地日志…" }
-        if paused { return "采集已暂停 · 恢复后补读日志" }
-        if result == nil { return "等待首次导入" }
-        if result!.filesByTool.values.reduce(0, +) == 0 { return "未发现日志 · 仅显示已保存历史" }
-        return "日志采集中 · 每 5 秒检查新增记录"
+        if error != nil { return copy.scanFailed }
+        if demo { return copy.demoMode }
+        if scanning { return copy.reading }
+        if paused { return copy.pausedStatus }
+        if result == nil { return copy.awaitingFirstImport }
+        if result!.filesByTool.values.reduce(0, +) == 0 { return copy.noLogsFound }
+        return copy.watching
     }
     var warnings: [String] {
         guard let r = result else { return [] }
         var lines: [String] = []
-        if !r.summary.excludedSessions.isEmpty { lines.append("\(r.summary.excludedSessions.count) 个 Codex 会话的计数出现回退，已排除；当前合计不完整。") }
-        if r.errors > 0 { lines.append("\(r.errors) 处日志无法读取，本轮结果可能不完整。") }
+        if !r.summary.excludedSessions.isEmpty { lines.append(copy.excludedSessions(r.summary.excludedSessions.count)) }
+        if r.errors > 0 { lines.append(copy.readErrors(r.errors)) }
         if r.incompleteUsage + r.summary.ambiguousMessages > 0 {
-            lines.append("\(r.incompleteUsage) 条用量字段不完整，\(r.summary.ambiguousMessages) 条消息快照冲突，已跳过。")
+            lines.append(copy.incompleteUsage(r.incompleteUsage, ambiguous: r.summary.ambiguousMessages))
         }
-        if r.invalidLines > 0 { lines.append("已跳过 \(r.invalidLines) 条无效或过长记录。") }
+        if r.invalidLines > 0 { lines.append(copy.invalidLines(r.invalidLines)) }
         let unallocated = events.filter { $0.occurredAt == nil }.count
-        if unallocated > 0 { lines.append("\(unallocated) 条历史累计记录无法确定发生日期，仅计入历史合计。") }
+        if unallocated > 0 { lines.append(copy.undatedRecords(unallocated)) }
         return lines
     }
 
@@ -164,7 +171,7 @@ final class AuditorModel: ObservableObject {
         demo = ProcessInfo.processInfo.arguments.contains("--demo")
         if ProcessInfo.processInfo.arguments.contains("--analysis") { tab = .analysis }
         directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            // Kept as "AIUsageAuditor" across the rename to Agent Meter so that
+            // Kept as "AIUsageAuditor" across the renames to Agent Meter and 码表 so that
             // ledgers written by earlier versions are not orphaned.
             .appendingPathComponent("AIUsageAuditor", isDirectory: true)
         if demo {
@@ -182,7 +189,11 @@ final class AuditorModel: ObservableObject {
             var next = Date.distantPast
             while !Task.isCancelled {
                 guard let self else { return }
-                self.clock = Date()
+                // The clock only ever feeds same-day comparisons. Republishing
+                // it twice a second rebuilt the whole panel — and any menu open
+                // inside it — so it now moves only when the day does.
+                let now = Date()
+                if !Calendar.current.isDate(self.clock, inSameDayAs: now) { self.clock = now }
                 if !self.paused && (Date() >= next || self.requestedScan) {
                     self.requestedScan = false
                     await self.refresh()
@@ -195,17 +206,30 @@ final class AuditorModel: ObservableObject {
     func refreshNow() { requestedScan = true }
     func togglePaused() { paused.toggle(); if !paused { requestedScan = true } }
     private func refresh() async {
-        guard !scanning else { return }
-        scanning = true
+        guard !refreshing else { return }
+        refreshing = true
+        defer { refreshing = false }
+        let scanIndicator = indicator { self.scanning = true }
         do { result = try await worker.scan(directory: directory); error = nil }
-        catch { self.error = (error as? LocalizedError)?.errorDescription ?? "日志读取失败。" }
-        scanning = false
+        catch { self.error = (error as? LogScanError)?.message(language) ?? copy.readFailed }
+        scanIndicator.cancel()
+        if scanning { scanning = false }
         if tab == .analysis {
-            analyzing = true
+            let analysisIndicator = indicator { self.analyzing = true }
             analysis = await worker.analyze()
-            analyzing = false
+            analysisIndicator.cancel()
+            if analyzing { analyzing = false }
         }
         writeDiagnostics()
+    }
+    /// Announces work only once it is slow enough to be worth a spinner; work
+    /// that finishes sooner never touches published state.
+    private func indicator(_ show: @escaping () -> Void) -> Task<Void, Never> {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            show()
+        }
     }
     private func writeDiagnostics() {
         var report: [String: Any] = ["mode": "jsonl_logs", "version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "development", "status": status,

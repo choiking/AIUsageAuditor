@@ -12,7 +12,7 @@
 		"4E783A9E10D2A8ABA38CD11C" = {
 			"isa" = "PBXFileReference";
 			"explicitFileType" = "wrapper.application";
-			"path" = "Agent Meter.app";
+			"path" = "码表.app";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
 		"6C7CCDEB3609F1FAA874E941" = {
@@ -61,6 +61,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "83299FAB0841B51E908B23E7";
 		};
+		"A2F9ECC2F71106BF8197D97C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/AgentMeter/Localization.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"236A5674D07CAA60158EFF7E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "A2F9ECC2F71106BF8197D97C";
+		};
 		"15E7880684D7BA781DC13CAA" = {
 			"isa" = "PBXGroup";
 			"name" = "App";
@@ -69,6 +79,7 @@
 				"99560014FEF3294129E34556",
 				"E925CEA119938D750DD3D206",
 				"83299FAB0841B51E908B23E7",
+				"A2F9ECC2F71106BF8197D97C",
 			);
 			"sourceTree" = "<group>";
 		};
@@ -80,6 +91,7 @@
 				"1BDEAD1CEB0E5AFA12211F6E",
 				"FD56BDCC68EACCAAC98FFD56",
 				"D58E81D867395917AEC1ECBC",
+				"236A5674D07CAA60158EFF7E",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
@@ -92,6 +104,16 @@
 		"285411DB73AAC26002EA7450" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "BEFE7B9E63FE5CF253034559";
+		};
+		"2BE8A54C536632E2ED5717DC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Tests/AuditorCoreTests/GroupingTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"5930E90542AFD23E5901F9A6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "2BE8A54C536632E2ED5717DC";
 		};
 		"B29275B1294D2AA872ED1E75" = {
 			"isa" = "PBXFileReference";
@@ -133,6 +155,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "6C7D589B4A586D6AABB782E9";
 		};
+		"5A3674CEBFC9711B10D7CF7A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Tests/AuditorCoreTests/PricingTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"9D4D68F230944530D29A5C23" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "5A3674CEBFC9711B10D7CF7A";
+		};
 		"AFD021C21B095A8561A19EBA" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -148,10 +180,12 @@
 			"name" = "Tests";
 			"children" = (
 				"BEFE7B9E63FE5CF253034559",
+				"2BE8A54C536632E2ED5717DC",
 				"B29275B1294D2AA872ED1E75",
 				"C34B7F5B1032B4DD386D9D57",
 				"AB3273BD54C8729552653B9D",
 				"6C7D589B4A586D6AABB782E9",
+				"5A3674CEBFC9711B10D7CF7A",
 				"AFD021C21B095A8561A19EBA",
 			);
 			"sourceTree" = "<group>";
@@ -161,10 +195,12 @@
 			"buildActionMask" = "2147483647";
 			"files" = (
 				"285411DB73AAC26002EA7450",
+				"5930E90542AFD23E5901F9A6",
 				"40CF2BBEFFDB9A3AE0FDBBBB",
 				"062138E90CCFD88AABF788D3",
 				"2F29796C8CA73889305132F3",
 				"2D8302D6045DF322E337A718",
+				"9D4D68F230944530D29A5C23",
 				"91F8B588F50729DC3EFC58B2",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
@@ -216,7 +252,7 @@
 		"E9B2E96ABC5F6856F2BE79CF" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "Agent Meter";
+				"PRODUCT_NAME" = "码表";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.app";
 				"INFOPLIST_FILE" = "Config/Info.plist";
 				"CODE_SIGN_STYLE" = "Automatic";
@@ -239,7 +275,7 @@
 		"5A8C91857F674E16E2724F47" = {
 			"isa" = "XCBuildConfiguration";
 			"buildSettings" = {
-				"PRODUCT_NAME" = "Agent Meter";
+				"PRODUCT_NAME" = "码表";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "local.agentmeter.app";
 				"INFOPLIST_FILE" = "Config/Info.plist";
 				"CODE_SIGN_STYLE" = "Automatic";
@@ -329,7 +365,7 @@
 				"8E50E7BBB677DEBA988D31D6",
 				"E87BBDE5F637736533DF4449",
 			);
-			"productName" = "Agent Meter";
+			"productName" = "码表";
 			"productReference" = "4E783A9E10D2A8ABA38CD11C";
 			"productType" = "com.apple.product-type.application";
 		};

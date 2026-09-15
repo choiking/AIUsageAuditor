@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.arguments.contains("--demo") || ProcessInfo.processInfo.arguments.contains("--show") {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 780),
                                   styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            window.title = "Agent Meter · Logs"
+            window.title = AuditorModel.shared.copy.windowTitle
             window.contentView = NSHostingView(rootView: AuditorPanel(model: AuditorModel.shared))
             window.isReleasedWhenClosed = false
             window.center(); window.makeKeyAndOrderFront(nil)
@@ -33,10 +33,12 @@ struct AgentMeterApp: App {
             AuditorPanel(model: model)
         } label: {
             Text(model.menuTitle)
-                .accessibilityLabel("今日日志上报 token：输入 \(model.today.input)，输出 \(model.today.output)")
+                .accessibilityLabel(model.copy.menuBarLabel(input: model.today.input, output: model.today.output))
         }
         .menuBarExtraStyle(.window)
-        Window("AI Usage Auditor · Preview", id: "preview") {
+        // A Scene title is fixed at launch, so this one follows the language
+        // chosen last run rather than switching with the panel.
+        Window(model.copy.previewTitle, id: "preview") {
             AuditorPanel(model: model)
         }
         .defaultSize(width: 460, height: 780)

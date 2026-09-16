@@ -13,9 +13,19 @@
 
 ## 界面截图
 
-![码表 面板](Docs/images/dashboard.png)
+| 用量 | 分析 |
+| --- | --- |
+| ![用量](Docs/images/usage-zh.png) | ![分析](Docs/images/analysis-zh.png) |
 
-今日全部日志来源的合计，并按日志入口分类展开。界面支持中文与英文。
+**用量** —— 今日全部日志来源的输入/输出合计、两级来源列表（两个分类默认收起，并标出各自的入口数量），以及所选工具的 token 细分，每一行都标注了它所求和的 JSONL 字段。
+
+**分析** —— 该统计期间的提示词数、涉及会话数与 AI 回复数，并把提示词归入七个关键词分类。
+
+界面支持中文与英文：
+
+| Usage | Analysis |
+| --- | --- |
+| ![Usage](Docs/images/usage-en.png) | ![Analysis](Docs/images/analysis-en.png) |
 
 ## 安装
 

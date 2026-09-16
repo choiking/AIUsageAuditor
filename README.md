@@ -11,11 +11,21 @@ No API key, proxy, certificate, or Accessibility permission required. Nothing le
 > **These are log-reported tokens — not your subscription quota, and not a bill.**
 > They cover Claude programming-agent and Codex sessions only. Ordinary Claude and ChatGPT chats are not included. The cost figure is a list-price estimate, not a bill — see [Cost estimate](#cost-estimate).
 
-## Screenshot
+## Screenshots
 
-![码表 dashboard](Docs/images/dashboard.png)
+| Usage | Analysis |
+| --- | --- |
+| ![Usage tab](Docs/images/usage-en.png) | ![Analysis tab](Docs/images/analysis-en.png) |
 
-Today's totals across all log sources, broken down by entry point. The interface is available in English and Chinese.
+**Usage** — today's input/output totals across all log sources, the two-level source list (both categories collapsed, with an entrypoint count), and the selected tool's token breakdown with the JSONL field each row is summed from.
+
+**Analysis** — prompt counts, sessions and assistant replies for the period, with prompts grouped into the seven keyword categories.
+
+The interface is available in English and Chinese:
+
+| 用量 | 分析 |
+| --- | --- |
+| ![用量](Docs/images/usage-zh.png) | ![分析](Docs/images/analysis-zh.png) |
 
 ## Install
 

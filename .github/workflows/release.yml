@@ -66,5 +66,5 @@ jobs:
 
           Reads `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/rollout-*.jsonl`. **If you do not use Claude Code or the Codex CLI locally, you will see almost nothing** — ordinary Claude and ChatGPT chats are not covered. These are log-reported tokens, not a subscription quota and not a bill.
 
-          See the [README](https://github.com/choiking/AIUsageAuditor#readme) for counting rules and limitations.
+          See the [README](https://github.com/choiking/AgentMeter#readme) for counting rules and limitations.
           NOTES

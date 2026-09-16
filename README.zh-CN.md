@@ -19,7 +19,7 @@
 
 ## 安装
 
-从 [Releases](https://github.com/choiking/AIUsageAuditor/releases) 下载最新的 `.zip`，解压后把 **码表.app** 拖进「应用程序」。
+从 [Releases](https://github.com/choiking/AgentMeter/releases) 下载最新的 `.zip`，解压后把 **码表.app** 拖进「应用程序」。
 
 该构建使用 ad-hoc 签名且未经过公证（notarize），因此首次打开时会被 macOS 拦截，提示信息常常会误导性地说应用「已损坏」。这其实只是隔离（quarantine）标记。**右键点击应用 → 打开 → 打开**，或执行：
 

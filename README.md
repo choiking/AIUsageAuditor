@@ -19,7 +19,7 @@ Today's totals across all log sources, broken down by entry point. The interface
 
 ## Install
 
-Download the latest `.zip` from [Releases](https://github.com/choiking/AIUsageAuditor/releases), unzip, and drag **码表.app** to Applications.
+Download the latest `.zip` from [Releases](https://github.com/choiking/AgentMeter/releases), unzip, and drag **码表.app** to Applications.
 
 The build is ad-hoc signed and not notarized, so macOS blocks it on first launch — often with a misleading "damaged" message. That's the quarantine flag. **Right-click the app → Open → Open**, or:
 

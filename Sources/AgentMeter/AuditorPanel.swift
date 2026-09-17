@@ -20,11 +20,11 @@ struct AuditorPanel: View {
                     Circle().fill(model.error != nil ? .red : (model.paused ? .orange : .teal)).frame(width: 8, height: 8)
                 }
                 tabBar
-                Picker(copy.period, selection: $model.period) {
+                Picker("", selection: $model.period) {
                     ForEach(LogPeriod.allCases, id: \.self) { period in
-                        Text(model.tab == .analysis && period == .all ? copy.history : copy.periodName(period)).tag(period)
+                        Text(copy.periodName(period)).tag(period)
                     }
-                }.pickerStyle(.segmented)
+                }.pickerStyle(.segmented).labelsHidden()
 
                 if model.tab == .analysis {
                     AnalysisPanel(model: model)

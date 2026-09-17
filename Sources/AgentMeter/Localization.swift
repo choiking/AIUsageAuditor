@@ -23,8 +23,6 @@ struct Copy {
     var previewTitle: String { t("码表 · 预览", "Agent Meter · Preview") }
     var subtitle: String { t("LOG USAGE  ·  日志上报用量", "LOG USAGE  ·  REPORTED TOKENS") }
     var languageMenu: String { t("语言", "Language") }
-    var period: String { t("统计期间", "Period") }
-    var history: String { t("历史", "History") }
     func periodName(_ period: LogPeriod) -> String {
         switch period {
         case .today: return t("今日", "Today")
